@@ -36,6 +36,7 @@ export const program: Program = {
   foundations: [
     {
       id: "f-drawing",
+      focus: "traditional",
       title: "Observation & drawing",
       blurb: "3–6 hrs/wk. Gesture → volume → animate → reconcile.",
       items: [
@@ -85,6 +86,7 @@ export const program: Program = {
     },
     {
       id: "f-design",
+      focus: "traditional",
       title: "Design & visual communication",
       blurb: "Shape language, silhouette, value, color, composition in motion.",
       items: [
@@ -114,11 +116,13 @@ export const program: Program = {
     },
     {
       id: "f-anim",
+      focus: "both",
       title: "Animation & performance",
       blurb: "12 Principles; intention made visible.",
       items: [
         {
           id: "f-anim-illusion",
+          focus: "both",
           title: "The Illusion of Life (Thomas & Johnston)",
           kind: "resource",
           order: 1,
@@ -127,6 +131,7 @@ export const program: Program = {
         },
         {
           id: "f-anim-ask",
+          focus: "both",
           title: "The Animator’s Survival Kit (Williams)",
           kind: "resource",
           order: 2,
@@ -135,6 +140,7 @@ export const program: Program = {
         },
         {
           id: "f-anim-blender-fund",
+          focus: "blender",
           title: "Blender Studio — Animation Fundamentals",
           kind: "resource",
           order: 3,
@@ -143,6 +149,7 @@ export const program: Program = {
         },
         {
           id: "f-anim-rigs",
+          focus: "blender",
           title: "Blender Studio — training / supplied rigs",
           kind: "resource",
           order: 4,
@@ -151,6 +158,7 @@ export const program: Program = {
         },
         {
           id: "f-anim-into",
+          focus: "both",
           title: "Into Animation — character animation foundations",
           kind: "resource",
           order: 5,
@@ -163,10 +171,12 @@ export const program: Program = {
     },
     {
       id: "f-story",
+      focus: "both",
       title: "Story, cinematography & editing",
       items: [
         {
           id: "f-story-glebas",
+          focus: "both",
           title: "Directing the Story (Glebas)",
           kind: "resource",
           order: 1,
@@ -175,6 +185,7 @@ export const program: Program = {
         },
         {
           id: "f-story-framed",
+          focus: "traditional",
           title: "Framed Ink (Mateu-Mestre)",
           kind: "resource",
           order: 2,
@@ -183,6 +194,7 @@ export const program: Program = {
         },
         {
           id: "f-story-resolve",
+          focus: "both",
           title: "DaVinci Resolve — edit / sound basics",
           kind: "resource",
           order: 3,
@@ -193,6 +205,7 @@ export const program: Program = {
     },
     {
       id: "f-context",
+      focus: "both",
       title: "Artistic context & criticism",
       blurb: "Weekly: analyze one sequence → diagram staging → try one technique.",
       items: [
@@ -216,6 +229,7 @@ export const program: Program = {
     },
     {
       id: "f-prod",
+      focus: "both",
       title: "Production & technical literacy",
       items: [
         {
@@ -247,6 +261,7 @@ export const program: Program = {
       modules: [
         {
           id: "t1-onboard",
+          focus: "blender",
           title: "Blender onboarding (pick one beginner course)",
           blurb: "Perplexity weeks 1–2. Finish one course path, then original work.",
           items: [
@@ -305,6 +320,7 @@ export const program: Program = {
         },
         {
           id: "t1-grok-support",
+          focus: "blender",
           title: "Supporting — Grok Phase A–B (nav + box modeling)",
           blurb: "Optional depth beside animation-early. Do not block Term 1 on these.",
           items: [
@@ -330,6 +346,7 @@ export const program: Program = {
         },
         {
           id: "t1-drawing",
+          focus: "traditional",
           title: "Parallel foundation — drawing & story",
           items: [
             {
@@ -358,6 +375,7 @@ export const program: Program = {
         },
         {
           id: "t1-anim",
+          focus: "blender",
           title: "First movement — ball, pendulum, props",
           items: [
             {
@@ -412,10 +430,12 @@ export const program: Program = {
         },
         {
           id: "t1-storyboard",
+          focus: "both",
           title: "Boards → animatic → package",
           items: [
             {
               id: "t1-board",
+              focus: "traditional",
               title: "Board a 6–12 panel silent action (staging + continuity)",
               kind: "project",
               order: 1,
@@ -424,6 +444,7 @@ export const program: Program = {
             },
             {
               id: "t1-animatic",
+              focus: "both",
               title: "Animatic with editing + simple sound",
               kind: "project",
               order: 2,
@@ -432,6 +453,7 @@ export const program: Program = {
             },
             {
               id: "t1-critique",
+              focus: "both",
               title: "Critique, revise, package files + attribution",
               kind: "prompt",
               order: 3,
@@ -440,6 +462,7 @@ export const program: Program = {
             },
             {
               id: "t1-external",
+              focus: "both",
               title: "Get outside eyes (Discord/forum) — paste notes or link",
               kind: "prompt",
               order: 4,
@@ -448,6 +471,7 @@ export const program: Program = {
             },
             {
               id: "t1-action-5s",
+              focus: "blender",
               title: "5–10 second animated action (Term 1 wrap)",
               kind: "project",
               order: 5,
@@ -456,6 +480,7 @@ export const program: Program = {
             },
             {
               id: "t1-sketchbook",
+              focus: "traditional",
               title: "Curated observational sketchbook selection",
               kind: "project",
               order: 6,
@@ -463,6 +488,7 @@ export const program: Program = {
             },
             {
               id: "t1-three-props",
+              focus: "blender",
               title: "Three simple props (no step-by-step tutorial)",
               kind: "project",
               order: 7,
@@ -483,6 +509,7 @@ export const program: Program = {
       modules: [
         {
           id: "t2-mechanics",
+          focus: "blender",
           title: "Body mechanics",
           items: [
             {
@@ -503,6 +530,7 @@ export const program: Program = {
             },
             {
               id: "t2-torso",
+              focus: "traditional",
               title: "Study: torso / pelvis / joints / balance sketches",
               kind: "practice",
               order: 3,
@@ -512,10 +540,12 @@ export const program: Program = {
         },
         {
           id: "t2-design",
+          focus: "both",
           title: "Design & look",
           items: [
             {
               id: "t2-char-packet",
+              focus: "traditional",
               title: "Simplified character design packet",
               kind: "project",
               order: 1,
@@ -524,6 +554,7 @@ export const program: Program = {
             },
             {
               id: "t2-env-value",
+              focus: "traditional",
               title: "Environment value study",
               kind: "practice",
               order: 2,
@@ -532,6 +563,7 @@ export const program: Program = {
             },
             {
               id: "t2-phase-d",
+              focus: "blender",
               title: "Supporting — Grok Phase D: Principled BSDF, 3-point/HDRI, Eevee vs Cycles",
               kind: "practice",
               order: 3,
@@ -542,6 +574,7 @@ export const program: Program = {
             },
             {
               id: "t2-phase-c",
+              focus: "blender",
               title: "Supporting — Grok Phase C: sculpting intro (head/creature) — optional",
               kind: "practice",
               order: 4,
@@ -552,6 +585,7 @@ export const program: Program = {
             },
             {
               id: "t2-abbitt",
+              focus: "blender",
               title: "Grant Abbitt modeling / sculpt videos (optional)",
               kind: "resource",
               order: 5,
@@ -564,12 +598,14 @@ export const program: Program = {
         },
         {
           id: "t2-microfilm",
+          focus: "both",
           title: "Microfilm (15–30s)",
           blurb:
             "One location, one central action, preferably one character. Existing / supplied rig OK. Gate feel: unbriefed viewers describe what happened and what the character wanted.",
           items: [
             {
               id: "t2-boards",
+              focus: "traditional",
               title: "Boards + animatic for the microfilm",
               kind: "project",
               order: 1,
@@ -578,6 +614,7 @@ export const program: Program = {
             },
             {
               id: "t2-film",
+              focus: "blender",
               title: "15–30s finished microfilm",
               kind: "project",
               order: 2,
@@ -586,6 +623,7 @@ export const program: Program = {
             },
             {
               id: "t2-sound",
+              focus: "both",
               title: "Intro sound pass in Resolve or Blender",
               kind: "practice",
               order: 3,
@@ -593,6 +631,7 @@ export const program: Program = {
             },
             {
               id: "t2-review",
+              focus: "both",
               title: "Show to someone cold — paste their read / notes",
               kind: "prompt",
               order: 4,
@@ -613,6 +652,7 @@ export const program: Program = {
       modules: [
         {
           id: "t3-acting",
+          focus: "blender",
           title: "Acting & performance",
           items: [
             {
@@ -653,10 +693,12 @@ export const program: Program = {
         },
         {
           id: "t3-cinema",
+          focus: "both",
           title: "Cinematography",
           items: [
             {
               id: "t3-three-ways",
+              focus: "both",
               title: "Same beat staged three ways",
               kind: "project",
               order: 1,
@@ -665,6 +707,7 @@ export const program: Program = {
             },
             {
               id: "t3-continuity",
+              focus: "both",
               title: "Camera / continuity study notes",
               kind: "practice",
               order: 2,
@@ -676,6 +719,7 @@ export const program: Program = {
         },
         {
           id: "t3-specialty",
+          focus: "both",
           title: "Sample specialty + decide",
           items: [
             {
@@ -703,6 +747,7 @@ export const program: Program = {
             },
             {
               id: "t3-overview",
+              focus: "blender",
               title: "Overview pass: modeling / surfacing / rigging / lighting / real-time",
               kind: "practice",
               order: 4,
@@ -722,6 +767,7 @@ export const program: Program = {
       modules: [
         {
           id: "t4-specialty",
+          focus: "both",
           title: "Specialty assignments",
           items: [
             {
@@ -740,6 +786,7 @@ export const program: Program = {
             },
             {
               id: "t4-foundations",
+              focus: "both",
               title: "Keep foundational material hours this term",
               kind: "prompt",
               order: 3,
@@ -749,6 +796,7 @@ export const program: Program = {
         },
         {
           id: "t4-collab",
+          focus: "both",
           title: "Collaboration",
           blurb: "Single-user app: log the collab yourself — no built-in social.",
           items: [
@@ -762,6 +810,7 @@ export const program: Program = {
             },
             {
               id: "t4-handoff",
+              focus: "both",
               title: "Handoff package (naming, versions, readme)",
               kind: "practice",
               order: 2,
@@ -805,6 +854,7 @@ export const program: Program = {
       modules: [
         {
           id: "t5-hard",
+          focus: "both",
           title: "Harder specialty work",
           items: [
             {
@@ -864,6 +914,7 @@ export const program: Program = {
         },
         {
           id: "t5-pipeline",
+          focus: "blender",
           title: "Pipeline deepening (Grok Year 2 overlay)",
           items: [
             {
@@ -899,6 +950,7 @@ export const program: Program = {
       modules: [
         {
           id: "t6-branch",
+          focus: "both",
           title: "Choose concentration",
           items: [
             {
@@ -914,6 +966,7 @@ export const program: Program = {
         },
         {
           id: "t6-studio",
+          focus: "both",
           title: "Studio concentration path",
           items: [
             {
@@ -953,6 +1006,7 @@ export const program: Program = {
         },
         {
           id: "t6-freelance",
+          focus: "both",
           title: "Independent / freelance concentration path",
           items: [
             {
@@ -986,6 +1040,7 @@ export const program: Program = {
         },
         {
           id: "t6-shared",
+          focus: "both",
           title: "Shared requirement",
           items: [
             {
@@ -1009,6 +1064,7 @@ export const program: Program = {
       modules: [
         {
           id: "t7-capstone",
+          focus: "both",
           title: "Capstone",
           items: [
             {
@@ -1071,6 +1127,7 @@ export const program: Program = {
         },
         {
           id: "t7-portfolio",
+          focus: "both",
           title: "Portfolio in parallel",
           items: [
             {
@@ -1102,6 +1159,7 @@ export const program: Program = {
       modules: [
         {
           id: "t8-launch",
+          focus: "both",
           title: "Launch package",
           items: [
             {
@@ -1169,6 +1227,7 @@ export const program: Program = {
         },
         {
           id: "t8-refs",
+          focus: "both",
           title: "Career references",
           items: [
             {

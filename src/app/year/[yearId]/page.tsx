@@ -2,13 +2,9 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import {
-  getYear,
-  getTermsForYear,
-  itemIdsInYear,
-  itemIdsInTerm,
-} from "@/data/curriculum";
+import { getYear, getTermsForYear } from "@/data/curriculum";
 import { ProgressMeter } from "@/components/ProgressMeter";
+import { useFocusMode } from "@/components/FocusModeProvider";
 import { useProgress } from "@/components/ProgressProvider";
 import { findUpNextTermId } from "@/lib/upNext";
 
@@ -16,6 +12,7 @@ export default function YearPage() {
   const params = useParams<{ yearId: string }>();
   const year = getYear(params.yearId);
   const { doneCount, progress, ready } = useProgress();
+  const { filterItemIds, mode, label } = useFocusMode();
 
   if (!year) {
     return (
@@ -29,8 +26,8 @@ export default function YearPage() {
   }
 
   const terms = getTermsForYear(year.id);
-  const ids = itemIdsInYear(year.id);
-  const upNextTermId = findUpNextTermId(progress);
+  const ids = filterItemIds(terms.flatMap((t) => t.modules));
+  const upNextTermId = findUpNextTermId(progress, mode);
 
   return (
     <div>
@@ -49,13 +46,13 @@ export default function YearPage() {
         <ProgressMeter
           done={doneCount(ids)}
           total={ids.length}
-          label="Year progress"
+          label={mode === "all" ? "Year progress" : `${label} in this year`}
         />
       </div>
 
       <ol className="mt-8 divide-y divide-[var(--line)] border-y border-[var(--line)]">
         {terms.map((term) => {
-          const tIds = itemIdsInTerm(term.id);
+          const tIds = filterItemIds(term.modules);
           const active = upNextTermId === term.id;
           return (
             <li key={term.id} className="py-5">

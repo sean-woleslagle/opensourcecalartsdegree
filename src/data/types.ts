@@ -2,7 +2,14 @@ export type Provenance = "both" | "grok" | "perplexity";
 
 export type ItemKind = "resource" | "practice" | "project" | "prompt";
 
-/** Specialty tracks A–H from curriculum synthesis (choose ~Term 3–4 / Year 2). */
+/**
+ * Daily focus for filtering the checklist.
+ * `both` = show in Blender and Traditional modes.
+ * Legacy A–H specialty tracks are not used for filtering.
+ */
+export type FocusTag = "blender" | "traditional" | "both";
+
+/** @deprecated Kept on data for history only — not used for UI filtering. */
 export type TrackId =
   | "A"
   | "B"
@@ -28,7 +35,9 @@ export interface CurriculumItem {
   /** Grok phases melded as supporting / optional beside the Perplexity spine. */
   supporting?: boolean;
   optional?: boolean;
-  /** Track IDs this item is especially relevant to (highlight after choice). */
+  /** Daily focus tag; overrides module.focus when set. */
+  focus?: FocusTag;
+  /** @deprecated Not used for filtering — A–H specialty tracks retired. */
   trackTags?: TrackId[];
 }
 
@@ -36,6 +45,8 @@ export interface Module {
   id: string;
   title: string;
   blurb?: string;
+  /** Default focus for items in this module (items may override). */
+  focus?: FocusTag;
   items: CurriculumItem[];
 }
 
