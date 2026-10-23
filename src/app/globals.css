@@ -1,0 +1,150 @@
+@import "tailwindcss";
+
+:root {
+  --ink: #14201a;
+  --ink-soft: #2a3d33;
+  --paper: #e6ebe4;
+  --paper-deep: #d5ddd1;
+  --mist: #c5d0c4;
+  --accent: #1f6b4a;
+  --accent-bright: #2f9e6b;
+  --highlight: #b8f0a8;
+  --warn: #c45c26;
+  --muted: #5c6b61;
+  --line: color-mix(in oklab, var(--ink) 12%, transparent);
+  --glow: color-mix(in oklab, var(--accent-bright) 28%, transparent);
+  --background: var(--paper);
+  --foreground: var(--ink);
+  --font-display: var(--font-syne);
+  --font-body: var(--font-figtree);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-paper: var(--paper);
+  --color-paper-deep: var(--paper-deep);
+  --color-mist: var(--mist);
+  --color-accent: var(--accent);
+  --color-accent-bright: var(--accent-bright);
+  --color-highlight: var(--highlight);
+  --color-warn: var(--warn);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --font-sans: var(--font-body);
+  --font-display: var(--font-display);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  color: var(--foreground);
+  font-family: var(--font-body), system-ui, sans-serif;
+  background:
+    radial-gradient(1200px 600px at 12% -10%, var(--glow), transparent 55%),
+    radial-gradient(900px 500px at 90% 8%, color-mix(in oklab, var(--highlight) 35%, transparent), transparent 50%),
+    linear-gradient(165deg, #eef3ec 0%, var(--paper) 42%, var(--paper-deep) 100%);
+  background-attachment: fixed;
+}
+
+body::before {
+  content: "";
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  opacity: 0.045;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  z-index: 0;
+}
+
+.app-shell {
+  position: relative;
+  z-index: 1;
+}
+
+.font-display {
+  font-family: var(--font-display), var(--font-body), sans-serif;
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes check-pop {
+  0% {
+    transform: scale(0.85);
+  }
+  60% {
+    transform: scale(1.08);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes pulse-soft {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.animate-rise {
+  animation: rise-in 0.55s ease-out both;
+}
+
+.animate-rise-delay-1 {
+  animation: rise-in 0.55s ease-out 0.08s both;
+}
+
+.animate-rise-delay-2 {
+  animation: rise-in 0.55s ease-out 0.16s both;
+}
+
+.animate-check {
+  animation: check-pop 0.28s ease-out;
+}
+
+.up-next-pulse {
+  animation: pulse-soft 2.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-rise,
+  .animate-rise-delay-1,
+  .animate-rise-delay-2,
+  .animate-check,
+  .up-next-pulse {
+    animation: none;
+  }
+}
+
+a {
+  color: inherit;
+}
+
+input,
+textarea,
+button {
+  font: inherit;
+}
