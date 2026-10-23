@@ -11,6 +11,7 @@ import {
 } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { supabaseConfigured } from "@/lib/supabase/config";
+import { isEmailAllowed } from "@/lib/auth/allowlist";
 import {
   loadLocalPrefs,
   loadLocalProgress,
@@ -23,8 +24,9 @@ import type { User } from "@supabase/supabase-js";
 
 interface ProgressContextValue {
   ready: boolean;
-  mode: "supabase" | "local";
+  mode: "supabase" | "none";
   user: User | null;
+  authorized: boolean;
   progress: ProgressMap;
   prefs: PrefsState;
   isDone: (itemId: string) => boolean;
@@ -45,22 +47,21 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
   const [progress, setProgress] = useState<ProgressMap>({});
   const [prefs, setPrefs] = useState<PrefsState>({ primaryTrack: null });
   const configured = supabaseConfigured();
-  const mode: "supabase" | "local" = configured && user ? "supabase" : "local";
+  const authorized = isEmailAllowed(user?.email);
+  const mode: "supabase" | "none" =
+    configured && authorized ? "supabase" : "none";
 
   useEffect(() => {
     let cancelled = false;
     const supabase = createClient();
 
     async function init() {
-      const localProgress = loadLocalProgress();
-      const localPrefs = loadLocalPrefs();
-      if (!cancelled) {
-        setProgress(localProgress);
-        setPrefs(localPrefs);
-      }
-
       if (!supabase) {
-        if (!cancelled) setReady(true);
+        if (!cancelled) {
+          setProgress({});
+          setPrefs({ primaryTrack: null });
+          setReady(true);
+        }
         return;
       }
 
@@ -70,19 +71,24 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
       if (cancelled) return;
       setUser(u);
 
-      if (u) {
+      if (u && isEmailAllowed(u.email)) {
+        const localProgress = loadLocalProgress();
+        const localPrefs = loadLocalPrefs();
+
         const { data: rows } = await supabase
           .from("progress")
           .select("item_id, done, notes, updated_at")
           .eq("user_id", u.id);
-        if (rows && !cancelled) {
+        if (!cancelled) {
           const map: ProgressMap = { ...localProgress };
-          for (const row of rows) {
-            map[row.item_id] = {
-              done: row.done,
-              notes: row.notes ?? "",
-              updatedAt: row.updated_at,
-            };
+          if (rows) {
+            for (const row of rows) {
+              map[row.item_id] = {
+                done: row.done,
+                notes: row.notes ?? "",
+                updatedAt: row.updated_at,
+              };
+            }
           }
           setProgress(map);
           saveLocalProgress(map);
@@ -92,13 +98,19 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
           .select("primary_track")
           .eq("user_id", u.id)
           .maybeSingle();
-        if (prefRow && !cancelled) {
-          const next = {
-            primaryTrack: (prefRow.primary_track as TrackId | null) ?? null,
-          };
+        if (!cancelled) {
+          const next = prefRow
+            ? {
+                primaryTrack:
+                  (prefRow.primary_track as TrackId | null) ?? null,
+              }
+            : localPrefs;
           setPrefs(next);
           saveLocalPrefs(next);
         }
+      } else if (!cancelled) {
+        setProgress({});
+        setPrefs({ primaryTrack: null });
       }
 
       if (!cancelled) setReady(true);
@@ -122,6 +134,8 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
 
   const persistRow = useCallback(
     async (itemId: string, done: boolean, notes: string) => {
+      if (!authorized || !user) return;
+
       const updatedAt = new Date().toISOString();
       setProgress((prev) => {
         const next = {
@@ -133,7 +147,7 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
       });
 
       const supabase = createClient();
-      if (!supabase || !user) return;
+      if (!supabase) return;
       await supabase.from("progress").upsert(
         {
           user_id: user.id,
@@ -145,7 +159,7 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
         { onConflict: "user_id,item_id" },
       );
     },
-    [user],
+    [authorized, user],
   );
 
   const setDone = useCallback(
@@ -166,11 +180,12 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
 
   const setPrimaryTrack = useCallback(
     async (track: TrackId | null) => {
+      if (!authorized || !user) return;
       const next = { primaryTrack: track };
       setPrefs(next);
       saveLocalPrefs(next);
       const supabase = createClient();
-      if (!supabase || !user) return;
+      if (!supabase) return;
       await supabase.from("prefs").upsert(
         {
           user_id: user.id,
@@ -180,7 +195,7 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
         { onConflict: "user_id" },
       );
     },
-    [user],
+    [authorized, user],
   );
 
   const signInWithMagicLink = useCallback(async (email: string) => {
@@ -203,6 +218,11 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
     const supabase = createClient();
     if (supabase) await supabase.auth.signOut();
     setUser(null);
+    setProgress({});
+    setPrefs({ primaryTrack: null });
+    if (typeof window !== "undefined") {
+      window.location.assign("/login");
+    }
   }, []);
 
   const value = useMemo<ProgressContextValue>(
@@ -210,21 +230,24 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
       ready,
       mode,
       user,
-      progress,
-      prefs,
-      isDone: (id) => progress[id]?.done ?? false,
-      getNotes: (id) => progress[id]?.notes ?? "",
+      authorized,
+      progress: authorized ? progress : {},
+      prefs: authorized ? prefs : { primaryTrack: null },
+      isDone: (id) => (authorized ? (progress[id]?.done ?? false) : false),
+      getNotes: (id) => (authorized ? (progress[id]?.notes ?? "") : ""),
       setDone,
       setNotes,
       setPrimaryTrack,
       signInWithMagicLink,
       signOut,
-      doneCount: (ids) => ids.filter((id) => progress[id]?.done).length,
+      doneCount: (ids) =>
+        authorized ? ids.filter((id) => progress[id]?.done).length : 0,
     }),
     [
       ready,
       mode,
       user,
+      authorized,
       progress,
       prefs,
       setDone,
