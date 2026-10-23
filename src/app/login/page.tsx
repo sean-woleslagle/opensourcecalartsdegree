@@ -2,7 +2,6 @@
 
 import { FormEvent, useState } from "react";
 import { useProgress } from "@/components/ProgressProvider";
-import { DEFAULT_ALLOWED_EMAIL } from "@/lib/auth/allowlist";
 import { supabaseConfigured } from "@/lib/supabase/config";
 
 export default function LoginPage() {
@@ -38,7 +37,7 @@ export default function LoginPage() {
       </h1>
       <p className="mt-3 text-sm leading-relaxed text-ink-soft">
         Magic link only. Curriculum and progress stay locked until you sign in
-        as the allowed account ({DEFAULT_ALLOWED_EMAIL}).
+        with your allowed account.
       </p>
 
       {!configured && (
@@ -60,7 +59,7 @@ export default function LoginPage() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className="mt-1 w-full rounded-md border border-[var(--line)] bg-paper px-3 py-2.5 text-ink focus:border-accent focus:outline-none"
-            placeholder={DEFAULT_ALLOWED_EMAIL}
+            placeholder="you@example.com"
           />
         </label>
         <button

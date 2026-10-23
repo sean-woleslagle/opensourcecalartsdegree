@@ -3,15 +3,14 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useProgress } from "./ProgressProvider";
-import { isEmailAllowed } from "@/lib/auth/allowlist";
 
 export function AppHeader() {
   const pathname = usePathname();
-  const { user, signOut, ready } = useProgress();
+  const { user, signOut, ready, authorized } = useProgress();
   const isHome = pathname === "/";
   const isAuthShell =
     pathname === "/login" || pathname === "/unauthorized";
-  const allowed = isEmailAllowed(user?.email);
+  const allowed = authorized;
 
   return (
     <header className="sticky top-0 z-20 border-b border-[var(--line)] bg-[color-mix(in_oklab,var(--paper)_88%,transparent)] backdrop-blur-md">

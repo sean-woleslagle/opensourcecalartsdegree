@@ -1,10 +1,9 @@
 "use client";
 
 import { useProgress } from "@/components/ProgressProvider";
-import { DEFAULT_ALLOWED_EMAIL } from "@/lib/auth/allowlist";
 
 export default function UnauthorizedPage() {
-  const { user, signOut } = useProgress();
+  const { signOut } = useProgress();
 
   return (
     <div className="mx-auto max-w-md pt-10">
@@ -15,17 +14,8 @@ export default function UnauthorizedPage() {
         Not authorized
       </h1>
       <p className="mt-3 text-sm leading-relaxed text-ink-soft">
-        This app is private.{" "}
-        {user?.email ? (
-          <>
-            Signed in as <strong>{user.email}</strong>, which is not on the
-            allowlist.
-          </>
-        ) : (
-          <>Your account is not on the allowlist.</>
-        )}{" "}
-        Only <code className="text-xs">{DEFAULT_ALLOWED_EMAIL}</code> can use the
-        curriculum.
+        This account isn’t authorized. Sign out and use your allowed account if
+        you have access.
       </p>
       <button
         type="button"
