@@ -3,13 +3,18 @@
 import { program } from "@/data/curriculum";
 import { ModuleList } from "@/components/ModuleList";
 import { ProgressMeter } from "@/components/ProgressMeter";
+import { useFocusMode } from "@/components/FocusModeProvider";
 import { useProgress } from "@/components/ProgressProvider";
 import { findUpNextId } from "@/lib/upNext";
 
 export default function FoundationsPage() {
   const { doneCount, progress } = useProgress();
-  const ids = program.foundations.flatMap((m) => m.items.map((i) => i.id));
-  const upNextId = findUpNextId(progress, { itemIds: ids });
+  const { filterItemIds, mode, label } = useFocusMode();
+  const ids = filterItemIds(program.foundations);
+  const upNextId = findUpNextId(progress, {
+    itemIds: ids,
+    focusMode: mode,
+  });
 
   return (
     <div>
@@ -29,11 +34,19 @@ export default function FoundationsPage() {
         <ProgressMeter
           done={doneCount(ids)}
           total={ids.length}
-          label="Foundational material"
+          label={
+            mode === "all"
+              ? "Foundational material"
+              : `${label} foundational material`
+          }
         />
       </div>
       <div className="mt-10">
-        <ModuleList modules={program.foundations} upNextId={upNextId} />
+        <ModuleList
+          modules={program.foundations}
+          upNextId={upNextId}
+          emptyLabel={`Nothing in foundational material for ${label} yet.`}
+        />
       </div>
     </div>
   );

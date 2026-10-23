@@ -4,26 +4,36 @@ import Link from "next/link";
 import {
   program,
   getTermsForYear,
-  itemIdsInYear,
-  itemIdsInTerm,
   allItems,
 } from "@/data/curriculum";
 import { ProgressMeter } from "@/components/ProgressMeter";
+import { useFocusMode } from "@/components/FocusModeProvider";
 import { useProgress } from "@/components/ProgressProvider";
 import { findUpNextId, findUpNextTermId } from "@/lib/upNext";
+import { itemMatchesFocus } from "@/lib/focusMode";
 
 export default function HomePage() {
   const { progress, doneCount, ready } = useProgress();
-  const foundationIds = program.foundations.flatMap((m) =>
-    m.items.map((i) => i.id),
-  );
-  const allIds = allItems().map((i) => i.id);
-  const upNextTermId = findUpNextTermId(progress);
-  const upNextId = findUpNextId(progress);
+  const { mode, label, filterItemIds } = useFocusMode();
+  const foundationIds = filterItemIds(program.foundations);
+  const allIds =
+    mode === "all"
+      ? allItems().map((i) => i.id)
+      : [
+          ...filterItemIds(program.foundations),
+          ...program.terms.flatMap((t) => filterItemIds(t.modules)),
+        ];
+  const upNextTermId = findUpNextTermId(progress, mode);
+  const upNextId = findUpNextId(progress, { focusMode: mode });
   const upNextItem = allItems().find((i) => i.id === upNextId);
   const primaryHref = upNextTermId ? `/term/${upNextTermId}` : "/term/t1";
   const hasCurriculumProgress = program.terms.some((t) =>
-    itemIdsInTerm(t.id).some((id) => progress[id]?.done),
+    t.modules.some((m) =>
+      m.items.some(
+        (item) =>
+          itemMatchesFocus(item, mode, m) && progress[item.id]?.done,
+      ),
+    ),
   );
   const primaryLabel = hasCurriculumProgress ? "Continue" : "Start Term 1";
 
@@ -56,6 +66,9 @@ export default function HomePage() {
           <p className="mt-5 max-w-lg text-sm text-muted">
             <span className="font-medium text-accent">Up next:</span>{" "}
             {upNextItem.title}
+            {mode !== "all" && (
+              <span className="text-muted"> ({label} focus)</span>
+            )}
           </p>
         )}
       </section>
@@ -64,7 +77,7 @@ export default function HomePage() {
         <ProgressMeter
           done={doneCount(allIds)}
           total={allIds.length}
-          label="Whole program"
+          label={mode === "all" ? "Whole program" : `${label} focus`}
         />
       </section>
 
@@ -78,7 +91,7 @@ export default function HomePage() {
         <ol className="divide-y divide-[var(--line)] border-y border-[var(--line)]">
           {program.years.map((year, idx) => {
             const terms = getTermsForYear(year.id);
-            const ids = itemIdsInYear(year.id);
+            const ids = filterItemIds(terms.flatMap((t) => t.modules));
             const done = doneCount(ids);
             return (
               <li
@@ -109,7 +122,7 @@ export default function HomePage() {
                 </Link>
                 <ul className="mt-3 flex flex-wrap gap-2">
                   {terms.map((t) => {
-                    const tIds = itemIdsInTerm(t.id);
+                    const tIds = filterItemIds(t.modules);
                     const tDone = doneCount(tIds);
                     const active = upNextTermId === t.id;
                     return (

@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Figtree, Syne } from "next/font/google";
 import { ProgressProvider } from "@/components/ProgressProvider";
+import { FocusModeProvider } from "@/components/FocusModeProvider";
 import { AppHeader } from "@/components/AppHeader";
 import "./globals.css";
 
@@ -45,12 +46,14 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${syne.variable} ${figtree.variable} antialiased`}>
         <ProgressProvider>
-          <div className="app-shell min-h-dvh">
-            <AppHeader />
-            <main className="mx-auto w-full max-w-3xl px-4 pb-16 pt-4 sm:px-6">
-              {children}
-            </main>
-          </div>
+          <FocusModeProvider>
+            <div className="app-shell min-h-dvh">
+              <AppHeader />
+              <main className="mx-auto w-full max-w-3xl px-4 pb-16 pt-4 sm:px-6">
+                {children}
+              </main>
+            </div>
+          </FocusModeProvider>
         </ProgressProvider>
       </body>
     </html>

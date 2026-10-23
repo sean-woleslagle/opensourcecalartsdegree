@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { getTerm, program, itemIdsInTerm } from "@/data/curriculum";
+import { getTerm, program } from "@/data/curriculum";
 import { ModuleList } from "@/components/ModuleList";
 import { ProgressMeter } from "@/components/ProgressMeter";
+import { useFocusMode } from "@/components/FocusModeProvider";
 import { useProgress } from "@/components/ProgressProvider";
 import { findUpNextId } from "@/lib/upNext";
 
@@ -12,6 +13,7 @@ export default function TermPage() {
   const params = useParams<{ termId: string }>();
   const term = getTerm(params.termId);
   const { doneCount, progress, ready } = useProgress();
+  const { filterItemIds, mode, label } = useFocusMode();
 
   if (!term) {
     return (
@@ -25,8 +27,14 @@ export default function TermPage() {
   }
 
   const year = program.years.find((y) => y.termIds.includes(term.id));
-  const ids = itemIdsInTerm(term.id);
-  const upNextId = findUpNextId(progress, { termId: term.id });
+  const ids = filterItemIds(term.modules);
+  const upNextId = findUpNextId(progress, {
+    termId: term.id,
+    focusMode: mode,
+  });
+  const upNextModuleId = term.modules.find((m) =>
+    m.items.some((i) => i.id === upNextId),
+  )?.id;
 
   return (
     <div>
@@ -56,15 +64,15 @@ export default function TermPage() {
         <ProgressMeter
           done={doneCount(ids)}
           total={ids.length}
-          label="Term progress"
+          label={mode === "all" ? "Term progress" : `${label} in this term`}
         />
       </div>
 
-      {ready && upNextId && (
+      {ready && upNextId && upNextModuleId && (
         <p className="mt-4 text-sm text-muted">
           Scroll to{" "}
           <a
-            href={`#${term.modules.find((m) => m.items.some((i) => i.id === upNextId))?.id ?? ""}`}
+            href={`#${upNextModuleId}`}
             className="font-medium text-accent hover:underline"
           >
             up next
@@ -74,7 +82,11 @@ export default function TermPage() {
       )}
 
       <div className="mt-10">
-        <ModuleList modules={term.modules} upNextId={upNextId} />
+        <ModuleList
+          modules={term.modules}
+          upNextId={upNextId}
+          emptyLabel={`Nothing in this term for ${label} yet.`}
+        />
       </div>
     </div>
   );

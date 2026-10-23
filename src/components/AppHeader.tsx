@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { FocusModeToggle } from "./FocusModeToggle";
 import { useProgress } from "./ProgressProvider";
 
 export function AppHeader() {
@@ -11,10 +12,11 @@ export function AppHeader() {
   const isAuthShell =
     pathname === "/login" || pathname === "/unauthorized";
   const allowed = authorized;
+  const showFocus = allowed && !isAuthShell;
 
   return (
     <header className="sticky top-0 z-20 border-b border-[var(--line)] bg-[color-mix(in_oklab,var(--paper)_88%,transparent)] backdrop-blur-md">
-      <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
+      <div className="mx-auto flex max-w-3xl items-center justify-between gap-2 px-4 py-3 sm:gap-3 sm:px-6">
         {isAuthShell || !allowed ? (
           <span
             className="font-display text-sm font-700 tracking-tight text-ink sm:text-base"
@@ -25,7 +27,7 @@ export function AppHeader() {
         ) : (
           <Link
             href="/"
-            className="font-display text-sm font-700 tracking-tight text-ink sm:text-base"
+            className="shrink-0 font-display text-sm font-700 tracking-tight text-ink sm:text-base"
             style={{ fontWeight: 700 }}
           >
             {isHome ? (
@@ -42,12 +44,13 @@ export function AppHeader() {
           </Link>
         )}
 
-        <div className="flex items-center gap-2 text-xs text-muted sm:text-sm">
+        <div className="flex min-w-0 flex-1 items-center justify-end gap-2 text-xs text-muted sm:gap-3 sm:text-sm">
+          {showFocus && <FocusModeToggle />}
           {ready && user && allowed && (
             <button
               type="button"
               onClick={() => void signOut()}
-              className="rounded-sm px-2 py-1 text-ink-soft underline-offset-2 hover:underline"
+              className="shrink-0 rounded-sm px-2 py-1 text-ink-soft underline-offset-2 hover:underline"
             >
               Sign out
             </button>
