@@ -1,42 +1,43 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { CurriculumItem, TrackId } from "@/data/types";
+import type { CurriculumItem } from "@/data/types";
 import { useProgress } from "./ProgressProvider";
 
 export function ChecklistItem({
   item,
   isUpNext,
-  primaryTrack,
 }: {
   item: CurriculumItem;
   isUpNext?: boolean;
-  primaryTrack?: TrackId | null;
 }) {
   const { isDone, getNotes, setDone, setNotes } = useProgress();
   const done = isDone(item.id);
   const notes = getNotes(item.id);
   const [draft, setDraft] = useState(notes);
-  const [showNotes, setShowNotes] = useState(Boolean(notes) || Boolean(item.notesEnabled));
+  const [showNotes, setShowNotes] = useState(
+    Boolean(notes) || Boolean(item.notesEnabled),
+  );
 
   useEffect(() => {
     setDraft(notes);
   }, [notes]);
 
-  const trackHit =
-    primaryTrack && item.trackTags?.includes(primaryTrack) ? primaryTrack : null;
-
   return (
     <li
       className={`group border-b border-[var(--line)] py-3.5 last:border-b-0 ${
-        isUpNext ? "bg-[color-mix(in_oklab,var(--highlight)_28%,transparent)] -mx-2 rounded-md px-2" : ""
-      } ${trackHit ? "ring-1 ring-inset ring-[color-mix(in_oklab,var(--accent)_35%,transparent)] -mx-2 rounded-md px-2" : ""}`}
+        isUpNext
+          ? "bg-[color-mix(in_oklab,var(--highlight)_28%,transparent)] -mx-2 rounded-md px-2"
+          : ""
+      }`}
     >
       <div className="flex items-start gap-3">
         <button
           type="button"
           aria-pressed={done}
-          aria-label={done ? `Mark incomplete: ${item.title}` : `Mark done: ${item.title}`}
+          aria-label={
+            done ? `Mark incomplete: ${item.title}` : `Mark done: ${item.title}`
+          }
           onClick={() => void setDone(item.id, !done)}
           className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md border-2 transition ${
             done
@@ -78,16 +79,6 @@ export function ChecklistItem({
             <span>{item.kind}</span>
             {item.supporting && <span>· supporting</span>}
             {item.optional && <span>· optional</span>}
-            {trackHit && (
-              <span className="normal-case tracking-normal text-accent">
-                · track {trackHit}
-              </span>
-            )}
-            {item.provenance && (
-              <span className="normal-case tracking-normal opacity-70">
-                · {item.provenance}
-              </span>
-            )}
           </div>
 
           {(item.url || item.findHint) && (

@@ -6,11 +6,11 @@ import {
   getTermsForYear,
   itemIdsInYear,
   itemIdsInTerm,
+  allItems,
 } from "@/data/curriculum";
 import { ProgressMeter } from "@/components/ProgressMeter";
 import { useProgress } from "@/components/ProgressProvider";
 import { findUpNextId, findUpNextTermId } from "@/lib/upNext";
-import { allItems } from "@/data/curriculum";
 
 export default function HomePage() {
   const { progress, doneCount, ready } = useProgress();
@@ -21,6 +21,11 @@ export default function HomePage() {
   const upNextTermId = findUpNextTermId(progress);
   const upNextId = findUpNextId(progress);
   const upNextItem = allItems().find((i) => i.id === upNextId);
+  const primaryHref = upNextTermId ? `/term/${upNextTermId}` : "/term/t1";
+  const hasCurriculumProgress = program.terms.some((t) =>
+    itemIdsInTerm(t.id).some((id) => progress[id]?.done),
+  );
+  const primaryLabel = hasCurriculumProgress ? "Continue" : "Start Term 1";
 
   return (
     <div>
@@ -29,30 +34,22 @@ export default function HomePage() {
           aria-hidden
           className="pointer-events-none absolute -right-16 -top-10 h-56 w-56 rounded-full bg-[color-mix(in_oklab,var(--highlight)_45%,transparent)] blur-3xl"
         />
-        <p className="animate-rise font-display text-4xl font-800 leading-[0.95] tracking-tight text-ink sm:text-5xl md:text-6xl" style={{ fontWeight: 800 }}>
+        <p
+          className="animate-rise font-display text-4xl font-800 leading-[0.95] tracking-tight text-ink sm:text-5xl md:text-6xl"
+          style={{ fontWeight: 800 }}
+        >
           {program.title}
         </p>
         <p className="animate-rise-delay-1 mt-4 max-w-md text-base text-ink-soft sm:text-lg">
           {program.tagline}
         </p>
-        <div className="animate-rise-delay-2 mt-6 flex flex-wrap items-center gap-3">
+        <div className="animate-rise-delay-2 mt-6">
           <Link
-            href={
-              upNextId && foundationIds.includes(upNextId)
-                ? "/foundations"
-                : upNextTermId
-                  ? `/term/${upNextTermId}`
-                  : "/year/y1"
-            }
-            className="inline-flex items-center rounded-md bg-ink px-4 py-2.5 text-sm font-semibold text-paper transition hover:bg-ink-soft"
+            href={primaryHref}
+            className="inline-flex items-center rounded-md bg-ink px-4 py-2.5 text-sm font-semibold transition hover:bg-ink-soft"
+            style={{ color: "var(--paper)" }}
           >
-            {upNextId || upNextTermId ? "Continue" : "Start Year 1"}
-          </Link>
-          <Link
-            href="/foundations"
-            className="inline-flex items-center rounded-md px-3 py-2.5 text-sm font-medium text-accent underline-offset-2 hover:underline"
-          >
-            Always-on foundations
+            {primaryLabel}
           </Link>
         </div>
         {ready && upNextItem && (
@@ -103,8 +100,7 @@ export default function HomePage() {
                   </div>
                   <p className="mt-1 text-sm text-muted">{year.focus}</p>
                   <p className="mt-2 text-sm text-ink-soft">
-                    Terms{" "}
-                    {terms.map((t) => t.number).join(" · ")}
+                    Terms {terms.map((t) => t.number).join(" · ")}
                     <span className="text-muted"> — nested inside</span>
                   </p>
                   <div className="mt-3">
@@ -141,22 +137,23 @@ export default function HomePage() {
         </ol>
       </section>
 
-      <section className="mt-10">
+      <section className="mt-10 border-t border-[var(--line)] pt-8">
         <Link href="/foundations" className="group block">
           <h2
             className="font-display text-xl font-700 text-ink group-hover:text-accent"
             style={{ fontWeight: 700 }}
           >
-            Always-on foundations
+            Foundational material
           </h2>
           <p className="mt-1 text-sm text-muted">
-            Drawing, design, animation, story, context, production — run beside every term.
+            Drawing, design, animation, story, context, production — reference
+            alongside the main path.
           </p>
           <div className="mt-3">
             <ProgressMeter
               done={doneCount(foundationIds)}
               total={foundationIds.length}
-              label="Foundations"
+              label="Foundational material"
             />
           </div>
         </Link>

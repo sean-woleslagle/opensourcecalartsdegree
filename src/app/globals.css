@@ -139,7 +139,7 @@ body::before {
   }
 }
 
-a {
+a:not([class*="text-"]):not([style*="color"]) {
   color: inherit;
 }
 
