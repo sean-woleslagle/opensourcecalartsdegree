@@ -9,9 +9,9 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { usePathname } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { supabaseConfigured } from "@/lib/supabase/config";
-import { isEmailAllowed } from "@/lib/auth/allowlist";
 import {
   loadLocalPrefs,
   loadLocalProgress,
@@ -21,6 +21,11 @@ import {
 import type { ProgressMap, PrefsState } from "@/lib/progress/types";
 import type { TrackId } from "@/data/types";
 import type { User } from "@supabase/supabase-js";
+
+/** Auth shell routes — allowlist is enforced server-side; never compare emails here. */
+function isAuthShellPath(pathname: string | null): boolean {
+  return pathname === "/login" || pathname === "/unauthorized";
+}
 
 interface ProgressContextValue {
   ready: boolean;
@@ -42,12 +47,14 @@ interface ProgressContextValue {
 const ProgressContext = createContext<ProgressContextValue | null>(null);
 
 export function ProgressProvider({ children }: { children: ReactNode }) {
+  const pathname = usePathname();
   const [ready, setReady] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [progress, setProgress] = useState<ProgressMap>({});
   const [prefs, setPrefs] = useState<PrefsState>({ primaryTrack: null });
   const configured = supabaseConfigured();
-  const authorized = isEmailAllowed(user?.email);
+  // Middleware / callback enforce the allowlist; client never sees the address.
+  const authorized = Boolean(user) && !isAuthShellPath(pathname);
   const mode: "supabase" | "none" =
     configured && authorized ? "supabase" : "none";
 
@@ -71,7 +78,12 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
       if (cancelled) return;
       setUser(u);
 
-      if (u && isEmailAllowed(u.email)) {
+      // Only hydrate progress when middleware would allow curriculum (not auth shell).
+      const onAuthShell =
+        typeof window !== "undefined" &&
+        isAuthShellPath(window.location.pathname);
+
+      if (u && !onAuthShell) {
         const localProgress = loadLocalProgress();
         const localPrefs = loadLocalPrefs();
 
