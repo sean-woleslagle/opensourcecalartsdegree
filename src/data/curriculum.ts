@@ -14,78 +14,29 @@ export const program: Program = {
       id: "y1",
       number: 1,
       title: "Year 1",
-      focus: "Foundations + animation-early Blender spine",
+      focus: "Animation-early Blender spine",
       termIds: ["t1", "t2", "t3"],
     },
     {
       id: "y2",
       number: 2,
       title: "Year 2",
-      focus: "Craft depth + choose / sample track",
+      focus: "Craft depth + harder briefs across the full path",
       termIds: ["t4", "t5"],
     },
     {
       id: "y3",
       number: 3,
       title: "Year 3",
-      focus: "Specialization + portfolio / career branch",
+      focus: "Portfolio polish + career readiness",
       termIds: ["t6", "t7", "t8"],
     },
   ],
-  tracks: [
-    {
-      id: "A",
-      name: "Character animation (film/TV)",
-      portfolioTarget:
-        "Strong shots: mechanics, pantomime, subtle thought-change, dialogue/sustained performance, interaction.",
-    },
-    {
-      id: "B",
-      name: "Storyboarding / visual storytelling",
-      portfolioTarget:
-        "2–3 sequences, ≥1 animatic, alternatives/revisions, concise pitch — no advanced sculpt prerequisite.",
-    },
-    {
-      id: "C",
-      name: "Character modeling & lookdev",
-      portfolioTarget:
-        "2–3 resolved characters: reference, turns, wire/UVs, materials, deformation tests.",
-    },
-    {
-      id: "D",
-      name: "Environment art",
-      portfolioTarget:
-        "2–3 coherent environments: reference, blockout, kits, materials, constraints.",
-    },
-    {
-      id: "E",
-      name: "Lighting & compositing",
-      portfolioTarget:
-        "Connected sequence or studies: moods, readability, continuity, pass breakdown.",
-    },
-    {
-      id: "F",
-      name: "Game / technical animation",
-      portfolioTarget:
-        "Playable or demonstrated system: input response, transitions, edge cases — not only loop movies.",
-    },
-    {
-      id: "G",
-      name: "Technical art & tools",
-      portfolioTarget:
-        "2–3 tools/systems with problem, use, reasoning, results, docs for another artist.",
-    },
-    {
-      id: "H",
-      name: "Independent creator / freelance generalist",
-      portfolioTarget:
-        "3 complete client-style case studies with brief, constraints, revisions, result.",
-    },
-  ],
+  tracks: [],
   foundations: [
     {
       id: "f-drawing",
-      title: "Always-on: Observation & drawing",
+      title: "Observation & drawing",
       blurb: "3–6 hrs/wk. Gesture → volume → animate → reconcile.",
       items: [
         {
@@ -134,7 +85,7 @@ export const program: Program = {
     },
     {
       id: "f-design",
-      title: "Always-on: Design & visual communication",
+      title: "Design & visual communication",
       blurb: "Shape language, silhouette, value, color, composition in motion.",
       items: [
         {
@@ -163,7 +114,7 @@ export const program: Program = {
     },
     {
       id: "f-anim",
-      title: "Always-on: Animation & performance",
+      title: "Animation & performance",
       blurb: "12 Principles; intention made visible.",
       items: [
         {
@@ -212,7 +163,7 @@ export const program: Program = {
     },
     {
       id: "f-story",
-      title: "Always-on: Story, cinematography & editing",
+      title: "Story, cinematography & editing",
       items: [
         {
           id: "f-story-glebas",
@@ -242,7 +193,7 @@ export const program: Program = {
     },
     {
       id: "f-context",
-      title: "Always-on: Artistic context & criticism",
+      title: "Artistic context & criticism",
       blurb: "Weekly: analyze one sequence → diagram staging → try one technique.",
       items: [
         {
@@ -265,7 +216,7 @@ export const program: Program = {
     },
     {
       id: "f-prod",
-      title: "Always-on: Production & technical literacy",
+      title: "Production & technical literacy",
       items: [
         {
           id: "f-prod-naming",
@@ -656,9 +607,9 @@ export const program: Program = {
     {
       id: "t3",
       number: 3,
-      title: "Acting, cinematography, choose specialty",
+      title: "Acting, cinematography, craft range",
       focus:
-        "Intention/beats, camera/continuity, specialty overview. End of Year 1: pick a primary track (still browsable). Track choice lives in Year 2 UI.",
+        "Intention/beats, camera/continuity, and a broader craft sampler. Browse everything — no track to pick.",
       modules: [
         {
           id: "t3-acting",
@@ -789,7 +740,7 @@ export const program: Program = {
             },
             {
               id: "t4-foundations",
-              title: "Keep always-on foundations hours this term",
+              title: "Keep foundational material hours this term",
               kind: "prompt",
               order: 3,
               provenance: "perplexity",
@@ -943,7 +894,7 @@ export const program: Program = {
     {
       id: "t6",
       number: 6,
-      title: "Production simulation + career branch",
+      title: "Production simulation + career prep",
       focus: "Studio concentration or independent/freelance. Both include a mid-project change request.",
       modules: [
         {
@@ -1289,19 +1240,19 @@ export function itemIdsInYear(yearId: string) {
 }
 
 export function orderedProgramItems() {
-  /** Recommended global order: foundations first (light), then T1→T8 module order. */
+  /** Recommended global order: T1→T8 spine first; foundational material as reference after. */
   const out: { id: string; termId?: string; orderKey: number }[] = [];
   let key = 0;
-  for (const mod of program.foundations) {
-    for (const item of [...mod.items].sort((a, b) => a.order - b.order)) {
-      out.push({ id: item.id, orderKey: key++ });
-    }
-  }
   for (const term of [...program.terms].sort((a, b) => a.number - b.number)) {
     for (const mod of term.modules) {
       for (const item of [...mod.items].sort((a, b) => a.order - b.order)) {
         out.push({ id: item.id, termId: term.id, orderKey: key++ });
       }
+    }
+  }
+  for (const mod of program.foundations) {
+    for (const item of [...mod.items].sort((a, b) => a.order - b.order)) {
+      out.push({ id: item.id, orderKey: key++ });
     }
   }
   return out;

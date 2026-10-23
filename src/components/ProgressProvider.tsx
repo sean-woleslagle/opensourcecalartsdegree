@@ -12,14 +12,8 @@ import {
 import { usePathname } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { supabaseConfigured } from "@/lib/supabase/config";
-import {
-  loadLocalPrefs,
-  loadLocalProgress,
-  saveLocalPrefs,
-  saveLocalProgress,
-} from "@/lib/progress/local";
-import type { ProgressMap, PrefsState } from "@/lib/progress/types";
-import type { TrackId } from "@/data/types";
+import { loadLocalProgress, saveLocalProgress } from "@/lib/progress/local";
+import type { ProgressMap } from "@/lib/progress/types";
 import type { User } from "@supabase/supabase-js";
 
 /** Auth shell routes — allowlist is enforced server-side; never compare emails here. */
@@ -33,12 +27,10 @@ interface ProgressContextValue {
   user: User | null;
   authorized: boolean;
   progress: ProgressMap;
-  prefs: PrefsState;
   isDone: (itemId: string) => boolean;
   getNotes: (itemId: string) => string;
   setDone: (itemId: string, done: boolean) => Promise<void>;
   setNotes: (itemId: string, notes: string) => Promise<void>;
-  setPrimaryTrack: (track: TrackId | null) => Promise<void>;
   signInWithMagicLink: (email: string) => Promise<{ error?: string }>;
   signOut: () => Promise<void>;
   doneCount: (ids: string[]) => number;
@@ -51,7 +43,6 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [progress, setProgress] = useState<ProgressMap>({});
-  const [prefs, setPrefs] = useState<PrefsState>({ primaryTrack: null });
   const configured = supabaseConfigured();
   // Middleware / callback enforce the allowlist; client never sees the address.
   const authorized = Boolean(user) && !isAuthShellPath(pathname);
@@ -66,7 +57,6 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
       if (!supabase) {
         if (!cancelled) {
           setProgress({});
-          setPrefs({ primaryTrack: null });
           setReady(true);
         }
         return;
@@ -85,7 +75,6 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
 
       if (u && !onAuthShell) {
         const localProgress = loadLocalProgress();
-        const localPrefs = loadLocalPrefs();
 
         const { data: rows } = await supabase
           .from("progress")
@@ -105,24 +94,8 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
           setProgress(map);
           saveLocalProgress(map);
         }
-        const { data: prefRow } = await supabase
-          .from("prefs")
-          .select("primary_track")
-          .eq("user_id", u.id)
-          .maybeSingle();
-        if (!cancelled) {
-          const next = prefRow
-            ? {
-                primaryTrack:
-                  (prefRow.primary_track as TrackId | null) ?? null,
-              }
-            : localPrefs;
-          setPrefs(next);
-          saveLocalPrefs(next);
-        }
       } else if (!cancelled) {
         setProgress({});
-        setPrefs({ primaryTrack: null });
       }
 
       if (!cancelled) setReady(true);
@@ -190,26 +163,6 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
     [persistRow, progress],
   );
 
-  const setPrimaryTrack = useCallback(
-    async (track: TrackId | null) => {
-      if (!authorized || !user) return;
-      const next = { primaryTrack: track };
-      setPrefs(next);
-      saveLocalPrefs(next);
-      const supabase = createClient();
-      if (!supabase) return;
-      await supabase.from("prefs").upsert(
-        {
-          user_id: user.id,
-          primary_track: track,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: "user_id" },
-      );
-    },
-    [authorized, user],
-  );
-
   const signInWithMagicLink = useCallback(async (email: string) => {
     const supabase = createClient();
     if (!supabase) {
@@ -231,7 +184,6 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
     if (supabase) await supabase.auth.signOut();
     setUser(null);
     setProgress({});
-    setPrefs({ primaryTrack: null });
     if (typeof window !== "undefined") {
       window.location.assign("/login");
     }
@@ -244,12 +196,10 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
       user,
       authorized,
       progress: authorized ? progress : {},
-      prefs: authorized ? prefs : { primaryTrack: null },
       isDone: (id) => (authorized ? (progress[id]?.done ?? false) : false),
       getNotes: (id) => (authorized ? (progress[id]?.notes ?? "") : ""),
       setDone,
       setNotes,
-      setPrimaryTrack,
       signInWithMagicLink,
       signOut,
       doneCount: (ids) =>
@@ -261,10 +211,8 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
       user,
       authorized,
       progress,
-      prefs,
       setDone,
       setNotes,
-      setPrimaryTrack,
       signInWithMagicLink,
       signOut,
     ],

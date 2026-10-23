@@ -11,7 +11,7 @@ import { findUpNextId } from "@/lib/upNext";
 export default function TermPage() {
   const params = useParams<{ termId: string }>();
   const term = getTerm(params.termId);
-  const { doneCount, progress, prefs, ready } = useProgress();
+  const { doneCount, progress, ready } = useProgress();
 
   if (!term) {
     return (
@@ -63,7 +63,10 @@ export default function TermPage() {
       {ready && upNextId && (
         <p className="mt-4 text-sm text-muted">
           Scroll to{" "}
-          <a href={`#${term.modules.find((m) => m.items.some((i) => i.id === upNextId))?.id ?? ""}`} className="font-medium text-accent hover:underline">
+          <a
+            href={`#${term.modules.find((m) => m.items.some((i) => i.id === upNextId))?.id ?? ""}`}
+            className="font-medium text-accent hover:underline"
+          >
             up next
           </a>{" "}
           in the list below.
@@ -71,11 +74,7 @@ export default function TermPage() {
       )}
 
       <div className="mt-10">
-        <ModuleList
-          modules={term.modules}
-          upNextId={upNextId}
-          primaryTrack={prefs.primaryTrack}
-        />
+        <ModuleList modules={term.modules} upNextId={upNextId} />
       </div>
     </div>
   );

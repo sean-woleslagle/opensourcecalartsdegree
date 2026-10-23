@@ -9,7 +9,6 @@ import {
   itemIdsInTerm,
 } from "@/data/curriculum";
 import { ProgressMeter } from "@/components/ProgressMeter";
-import { TrackPicker } from "@/components/TrackPicker";
 import { useProgress } from "@/components/ProgressProvider";
 import { findUpNextTermId } from "@/lib/upNext";
 
@@ -53,18 +52,6 @@ export default function YearPage() {
           label="Year progress"
         />
       </div>
-
-      {year.number >= 2 && (
-        <div className="mt-8">
-          <TrackPicker deferred={year.number === 2} />
-        </div>
-      )}
-
-      {year.number === 1 && (
-        <p className="mt-6 text-sm text-muted">
-          Track choice is deferred until Year 2. Browse everything; recommended order stays visible.
-        </p>
-      )}
 
       <ol className="mt-8 divide-y divide-[var(--line)] border-y border-[var(--line)]">
         {terms.map((term) => {
