@@ -13,7 +13,14 @@ import { usePathname } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { supabaseConfigured } from "@/lib/supabase/config";
 import { loadLocalProgress, saveLocalProgress } from "@/lib/progress/local";
-import type { ProgressMap } from "@/lib/progress/types";
+import {
+  entryFromRow,
+  isHandled,
+  normalizeStatus,
+  type ItemStatus,
+  type ProgressMap,
+  type ProgressRow,
+} from "@/lib/progress/types";
 import type { User } from "@supabase/supabase-js";
 
 /** Auth shell routes — allowlist is enforced server-side; never compare emails here. */
@@ -27,12 +34,20 @@ interface ProgressContextValue {
   user: User | null;
   authorized: boolean;
   progress: ProgressMap;
+  getStatus: (itemId: string) => ItemStatus;
   isDone: (itemId: string) => boolean;
+  isDismissed: (itemId: string) => boolean;
   getNotes: (itemId: string) => string;
+  setStatus: (itemId: string, status: ItemStatus) => Promise<void>;
   setDone: (itemId: string, done: boolean) => Promise<void>;
+  dismiss: (itemId: string) => Promise<void>;
+  undismiss: (itemId: string) => Promise<void>;
   setNotes: (itemId: string, notes: string) => Promise<void>;
   signInWithMagicLink: (email: string) => Promise<{ error?: string }>;
   signOut: () => Promise<void>;
+  /** Done + dismissed (skipped on purpose) — Sean's "handled" progress. */
+  handledCount: (ids: string[]) => number;
+  /** @deprecated Use handledCount — same meaning for meters. */
   doneCount: (ids: string[]) => number;
 }
 
@@ -76,19 +91,26 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
       if (u && !onAuthShell) {
         const localProgress = loadLocalProgress();
 
-        const { data: rows } = await supabase
+        // Prefer status column; fall back if migration 002 not applied yet.
+        let rows: ProgressRow[] | null = null;
+        const withStatus = await supabase
           .from("progress")
-          .select("item_id, done, notes, updated_at")
+          .select("item_id, done, status, notes, updated_at")
           .eq("user_id", u.id);
+        if (withStatus.error) {
+          const legacy = await supabase
+            .from("progress")
+            .select("item_id, done, notes, updated_at")
+            .eq("user_id", u.id);
+          rows = (legacy.data as ProgressRow[] | null) ?? null;
+        } else {
+          rows = (withStatus.data as ProgressRow[] | null) ?? null;
+        }
         if (!cancelled) {
           const map: ProgressMap = { ...localProgress };
           if (rows) {
             for (const row of rows) {
-              map[row.item_id] = {
-                done: row.done,
-                notes: row.notes ?? "",
-                updatedAt: row.updated_at,
-              };
+              map[row.item_id] = entryFromRow(row);
             }
           }
           setProgress(map);
@@ -118,14 +140,14 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const persistRow = useCallback(
-    async (itemId: string, done: boolean, notes: string) => {
+    async (itemId: string, status: ItemStatus, notes: string) => {
       if (!authorized || !user) return;
 
       const updatedAt = new Date().toISOString();
       setProgress((prev) => {
         const next = {
           ...prev,
-          [itemId]: { done, notes, updatedAt },
+          [itemId]: { status, notes, updatedAt },
         };
         saveLocalProgress(next);
         return next;
@@ -133,32 +155,60 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
 
       const supabase = createClient();
       if (!supabase) return;
-      await supabase.from("progress").upsert(
-        {
-          user_id: user.id,
-          item_id: itemId,
-          done,
-          notes: notes || null,
-          updated_at: updatedAt,
-        },
+      const base = {
+        user_id: user.id,
+        item_id: itemId,
+        done: status === "done",
+        notes: notes || null,
+        updated_at: updatedAt,
+      };
+      const { error } = await supabase.from("progress").upsert(
+        { ...base, status },
         { onConflict: "user_id,item_id" },
       );
+      // Until migration 002 is applied, status column is missing — keep done in sync for open/done.
+      if (error && status !== "dismissed") {
+        await supabase
+          .from("progress")
+          .upsert(base, { onConflict: "user_id,item_id" });
+      }
     },
     [authorized, user],
   );
 
-  const setDone = useCallback(
-    async (itemId: string, done: boolean) => {
+  const setStatus = useCallback(
+    async (itemId: string, status: ItemStatus) => {
       const notes = progress[itemId]?.notes ?? "";
-      await persistRow(itemId, done, notes);
+      await persistRow(itemId, status, notes);
     },
     [persistRow, progress],
   );
 
+  const setDone = useCallback(
+    async (itemId: string, done: boolean) => {
+      await setStatus(itemId, done ? "done" : "open");
+    },
+    [setStatus],
+  );
+
+  const dismiss = useCallback(
+    async (itemId: string) => {
+      await setStatus(itemId, "dismissed");
+    },
+    [setStatus],
+  );
+
+  const undismiss = useCallback(
+    async (itemId: string) => {
+      await setStatus(itemId, "open");
+    },
+    [setStatus],
+  );
+
   const setNotes = useCallback(
     async (itemId: string, notes: string) => {
-      const done = progress[itemId]?.done ?? false;
-      await persistRow(itemId, done, notes);
+      const status = normalizeStatus(progress[itemId]);
+      await persistRow(itemId, status, notes);
     },
     [persistRow, progress],
   );
@@ -189,6 +239,14 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const countHandled = useCallback(
+    (ids: string[]) =>
+      authorized
+        ? ids.filter((id) => isHandled(progress[id]?.status)).length
+        : 0,
+    [authorized, progress],
+  );
+
   const value = useMemo<ProgressContextValue>(
     () => ({
       ready,
@@ -196,14 +254,22 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
       user,
       authorized,
       progress: authorized ? progress : {},
-      isDone: (id) => (authorized ? (progress[id]?.done ?? false) : false),
+      getStatus: (id) =>
+        authorized ? normalizeStatus(progress[id]) : "open",
+      isDone: (id) =>
+        authorized ? progress[id]?.status === "done" : false,
+      isDismissed: (id) =>
+        authorized ? progress[id]?.status === "dismissed" : false,
       getNotes: (id) => (authorized ? (progress[id]?.notes ?? "") : ""),
+      setStatus,
       setDone,
+      dismiss,
+      undismiss,
       setNotes,
       signInWithMagicLink,
       signOut,
-      doneCount: (ids) =>
-        authorized ? ids.filter((id) => progress[id]?.done).length : 0,
+      handledCount: countHandled,
+      doneCount: countHandled,
     }),
     [
       ready,
@@ -211,10 +277,14 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
       user,
       authorized,
       progress,
+      setStatus,
       setDone,
+      dismiss,
+      undismiss,
       setNotes,
       signInWithMagicLink,
       signOut,
+      countHandled,
     ],
   );
 

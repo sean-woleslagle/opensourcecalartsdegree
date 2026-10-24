@@ -8,7 +8,7 @@ import {
   itemMatchesFocus,
   type FocusMode,
 } from "@/lib/focusMode";
-import type { ProgressMap } from "@/lib/progress/types";
+import { isHandled, type ProgressMap } from "@/lib/progress/types";
 
 function focusAllowedIds(mode: FocusMode): Set<string> | null {
   if (mode === "all") return null;
@@ -26,6 +26,10 @@ function focusAllowedIds(mode: FocusMode): Set<string> | null {
     }
   }
   return ids;
+}
+
+function isIncomplete(progress: ProgressMap, id: string): boolean {
+  return !isHandled(progress[id]?.status);
 }
 
 export function findUpNextId(
@@ -48,7 +52,7 @@ export function findUpNextId(
   }
 
   for (const c of candidates) {
-    if (!progress[c.id]?.done) return c.id;
+    if (isIncomplete(progress, c.id)) return c.id;
   }
   return null;
 }
@@ -65,7 +69,7 @@ export function findUpNextTermId(
     let ids = itemIdsInTerm(termId);
     if (focusSet) ids = ids.filter((id) => focusSet.has(id));
     if (ids.length === 0) continue;
-    if (ids.some((id) => !progress[id]?.done)) return termId;
+    if (ids.some((id) => isIncomplete(progress, id))) return termId;
   }
   return null;
 }

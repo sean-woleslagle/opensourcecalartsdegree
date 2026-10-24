@@ -11,9 +11,10 @@ import { useFocusMode } from "@/components/FocusModeProvider";
 import { useProgress } from "@/components/ProgressProvider";
 import { findUpNextId, findUpNextTermId } from "@/lib/upNext";
 import { itemMatchesFocus } from "@/lib/focusMode";
+import { isHandled } from "@/lib/progress/types";
 
 export default function HomePage() {
-  const { progress, doneCount, ready } = useProgress();
+  const { progress, handledCount, ready } = useProgress();
   const { mode, label, filterItemIds } = useFocusMode();
   const foundationIds = filterItemIds(program.foundations);
   const allIds =
@@ -31,7 +32,8 @@ export default function HomePage() {
     t.modules.some((m) =>
       m.items.some(
         (item) =>
-          itemMatchesFocus(item, mode, m) && progress[item.id]?.done,
+          itemMatchesFocus(item, mode, m) &&
+          isHandled(progress[item.id]?.status),
       ),
     ),
   );
@@ -75,7 +77,7 @@ export default function HomePage() {
 
       <section className="mb-8">
         <ProgressMeter
-          done={doneCount(allIds)}
+          done={handledCount(allIds)}
           total={allIds.length}
           label={mode === "all" ? "Whole program" : `${label} focus`}
         />
@@ -92,7 +94,7 @@ export default function HomePage() {
           {program.years.map((year, idx) => {
             const terms = getTermsForYear(year.id);
             const ids = filterItemIds(terms.flatMap((t) => t.modules));
-            const done = doneCount(ids);
+            const done = handledCount(ids);
             return (
               <li
                 key={year.id}
@@ -123,7 +125,7 @@ export default function HomePage() {
                 <ul className="mt-3 flex flex-wrap gap-2">
                   {terms.map((t) => {
                     const tIds = filterItemIds(t.modules);
-                    const tDone = doneCount(tIds);
+                    const tDone = handledCount(tIds);
                     const active = upNextTermId === t.id;
                     return (
                       <li key={t.id}>
@@ -164,7 +166,7 @@ export default function HomePage() {
           </p>
           <div className="mt-3">
             <ProgressMeter
-              done={doneCount(foundationIds)}
+              done={handledCount(foundationIds)}
               total={foundationIds.length}
               label="Foundational material"
             />

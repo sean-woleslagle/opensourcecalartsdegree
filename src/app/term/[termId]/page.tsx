@@ -12,7 +12,7 @@ import { findUpNextId } from "@/lib/upNext";
 export default function TermPage() {
   const params = useParams<{ termId: string }>();
   const term = getTerm(params.termId);
-  const { doneCount, progress, ready } = useProgress();
+  const { handledCount, progress, ready } = useProgress();
   const { filterItemIds, mode, label } = useFocusMode();
 
   if (!term) {
@@ -57,12 +57,13 @@ export default function TermPage() {
         {term.focus}
       </p>
       <p className="mt-3 text-xs text-muted">
-        Recommended order shown. No hard gates — skip ahead anytime.
+        Recommended order shown. No hard gates — skip ahead anytime. Dismiss
+        alternate paths you skip on purpose.
       </p>
 
       <div className="mt-6">
         <ProgressMeter
-          done={doneCount(ids)}
+          done={handledCount(ids)}
           total={ids.length}
           label={mode === "all" ? "Term progress" : `${label} in this term`}
         />
