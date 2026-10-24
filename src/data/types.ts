@@ -51,7 +51,7 @@ export interface CurriculumItem extends ItemDetailFields {
   provenance?: Provenance;
   /** Optional notes/link field (critique, Discord paste, review notes). */
   notesEnabled?: boolean;
-  /** Grok phases melded as supporting / optional beside the Perplexity spine. */
+  /** Optional / supporting practice beside the main term path. */
   supporting?: boolean;
   optional?: boolean;
   /** Daily focus tag; overrides module.focus when set. */
