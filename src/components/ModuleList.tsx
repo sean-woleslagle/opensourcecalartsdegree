@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo, useState } from "react";
 import type { Module } from "@/data/types";
 import { ChecklistItem } from "./ChecklistItem";
 import { useFocusMode } from "./FocusModeProvider";
@@ -15,9 +16,20 @@ export function ModuleList({
   /** Shown when the current focus mode filters everything out. */
   emptyLabel?: string;
 }) {
-  const { ready } = useProgress();
+  const { ready, getStatus } = useProgress();
   const { filterModules, mode, label } = useFocusMode();
+  const [showDismissed, setShowDismissed] = useState(false);
   const visible = filterModules(modules);
+
+  const dismissedCount = useMemo(() => {
+    let n = 0;
+    for (const mod of visible) {
+      for (const item of mod.items) {
+        if (getStatus(item.id) === "dismissed") n += 1;
+      }
+    }
+    return n;
+  }, [visible, getStatus]);
 
   if (visible.length === 0) {
     const fallback =
@@ -34,8 +46,31 @@ export function ModuleList({
 
   return (
     <div className="space-y-8">
+      {dismissedCount > 0 && (
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-xs text-muted">
+            {dismissedCount} dismissed
+            {!showDismissed ? " · hidden from list" : ""}
+          </p>
+          <button
+            type="button"
+            className="min-h-9 rounded-md px-2.5 text-sm font-medium text-accent underline-offset-2 hover:underline"
+            onClick={() => setShowDismissed((v) => !v)}
+            aria-pressed={showDismissed}
+          >
+            {showDismissed ? "Hide dismissed" : "Show dismissed"}
+          </button>
+        </div>
+      )}
+
       {visible.map((mod) => {
-        const items = [...mod.items].sort((a, b) => a.order - b.order);
+        const items = [...mod.items]
+          .sort((a, b) => a.order - b.order)
+          .filter(
+            (item) =>
+              showDismissed || getStatus(item.id) !== "dismissed",
+          );
+        if (items.length === 0) return null;
         return (
           <section key={mod.id} id={mod.id}>
             <h3

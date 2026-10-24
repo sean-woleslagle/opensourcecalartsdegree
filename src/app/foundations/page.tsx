@@ -8,7 +8,7 @@ import { useProgress } from "@/components/ProgressProvider";
 import { findUpNextId } from "@/lib/upNext";
 
 export default function FoundationsPage() {
-  const { doneCount, progress } = useProgress();
+  const { handledCount, progress } = useProgress();
   const { filterItemIds, mode, label } = useFocusMode();
   const ids = filterItemIds(program.foundations);
   const upNextId = findUpNextId(progress, {
@@ -32,7 +32,7 @@ export default function FoundationsPage() {
       </p>
       <div className="mt-6">
         <ProgressMeter
-          done={doneCount(ids)}
+          done={handledCount(ids)}
           total={ids.length}
           label={
             mode === "all"

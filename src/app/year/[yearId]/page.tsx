@@ -11,7 +11,7 @@ import { findUpNextTermId } from "@/lib/upNext";
 export default function YearPage() {
   const params = useParams<{ yearId: string }>();
   const year = getYear(params.yearId);
-  const { doneCount, progress, ready } = useProgress();
+  const { handledCount, progress, ready } = useProgress();
   const { filterItemIds, mode, label } = useFocusMode();
 
   if (!year) {
@@ -44,7 +44,7 @@ export default function YearPage() {
 
       <div className="mt-6">
         <ProgressMeter
-          done={doneCount(ids)}
+          done={handledCount(ids)}
           total={ids.length}
           label={mode === "all" ? "Year progress" : `${label} in this year`}
         />
@@ -72,13 +72,13 @@ export default function YearPage() {
                     )}
                   </h2>
                   <span className="shrink-0 text-sm tabular-nums text-muted">
-                    {ready ? `${doneCount(tIds)}/${tIds.length}` : "—"}
+                    {ready ? `${handledCount(tIds)}/${tIds.length}` : "—"}
                   </span>
                 </div>
                 <p className="mt-2 text-sm text-muted">{term.focus}</p>
                 <div className="mt-3">
                   <ProgressMeter
-                    done={doneCount(tIds)}
+                    done={handledCount(tIds)}
                     total={tIds.length}
                     label="Term"
                   />
