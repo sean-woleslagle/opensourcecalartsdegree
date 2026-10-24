@@ -1,4 +1,11 @@
-import type { Program } from "./types";
+import type {
+  CurriculumItem,
+  Module,
+  Program,
+  Term,
+  Year,
+} from "./types";
+import { withDetails } from "./itemDetails";
 
 /**
  * Structured curriculum for the daily-driver app.
@@ -1774,6 +1781,60 @@ export function getYear(yearId: string) {
 
 export function getTerm(termId: string) {
   return program.terms.find((t) => t.id === termId);
+}
+
+export type ItemLocation =
+  | {
+      item: CurriculumItem;
+      module: Module;
+      term: Term;
+      year: Year | undefined;
+      kind: "term";
+      backHref: string;
+      backLabel: string;
+    }
+  | {
+      item: CurriculumItem;
+      module: Module;
+      term?: undefined;
+      year?: undefined;
+      kind: "foundations";
+      backHref: string;
+      backLabel: string;
+    };
+
+/** Resolve a checklist item by id, with nav context for the detail page. */
+export function getItemLocation(itemId: string): ItemLocation | undefined {
+  for (const term of program.terms) {
+    for (const mod of term.modules) {
+      const found = mod.items.find((i) => i.id === itemId);
+      if (found) {
+        const year = program.years.find((y) => y.termIds.includes(term.id));
+        return {
+          item: withDetails(found),
+          module: mod,
+          term,
+          year,
+          kind: "term",
+          backHref: `/term/${term.id}`,
+          backLabel: `Term ${term.number}`,
+        };
+      }
+    }
+  }
+  for (const mod of program.foundations) {
+    const found = mod.items.find((i) => i.id === itemId);
+    if (found) {
+      return {
+        item: withDetails(found),
+        module: mod,
+        kind: "foundations",
+        backHref: "/foundations",
+        backLabel: "Foundational material",
+      };
+    }
+  }
+  return undefined;
 }
 
 export function getTermsForYear(yearId: string) {

@@ -20,7 +20,24 @@ export type TrackId =
   | "G"
   | "H";
 
-export interface CurriculumItem {
+export interface ItemLink {
+  label: string;
+  url: string;
+}
+
+/** Richer fields for the item drill-down view (list keeps short `description`). */
+export interface ItemDetailFields {
+  /** Longer how-to / context (paragraphs). */
+  detail?: string;
+  /** Numbered session steps — what to do, in order. */
+  steps?: string[];
+  /** Success criteria / done-when checks. */
+  criteria?: string;
+  /** Extra named links beyond the primary `url`. */
+  links?: ItemLink[];
+}
+
+export interface CurriculumItem extends ItemDetailFields {
   id: string;
   title: string;
   /** Short context so the checklist item is actionable without leaving the app. */
