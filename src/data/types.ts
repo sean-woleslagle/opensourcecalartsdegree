@@ -23,6 +23,8 @@ export type TrackId =
 export interface CurriculumItem {
   id: string;
   title: string;
+  /** Short context so the checklist item is actionable without leaving the app. */
+  description?: string;
   kind: ItemKind;
   /** Recommended sequence within the module (lower = earlier). */
   order: number;
