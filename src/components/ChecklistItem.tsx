@@ -95,6 +95,16 @@ export function ChecklistItem({
             </p>
           </div>
 
+          {item.description && !dismissed && (
+            <p
+              className={`mt-1 max-w-prose text-sm leading-relaxed ${
+                done ? "text-muted" : "text-ink-soft"
+              }`}
+            >
+              {item.description}
+            </p>
+          )}
+
           <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] uppercase tracking-wide text-muted">
             <span>{item.kind}</span>
             {item.supporting && <span>· supporting</span>}
