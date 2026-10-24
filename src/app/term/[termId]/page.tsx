@@ -57,8 +57,8 @@ export default function TermPage() {
         {term.focus}
       </p>
       <p className="mt-3 text-xs text-muted">
-        Recommended order shown. No hard gates — skip ahead anytime. Dismiss
-        alternate paths you skip on purpose.
+        Recommended order shown — skip ahead anytime. Mark unused alternate
+        paths as dismissed so Up next stays honest.
       </p>
 
       <div className="mt-6">
