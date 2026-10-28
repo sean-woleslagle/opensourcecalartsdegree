@@ -46,7 +46,7 @@ export function findUpNextId(
     candidates = ordered.filter((c) => set.has(c.id));
   }
 
-  const focusSet = focusAllowedIds(scope?.focusMode ?? "all");
+  const focusSet = focusAllowedIds(scope?.focusMode ?? "blender");
   if (focusSet) {
     candidates = candidates.filter((c) => focusSet.has(c.id));
   }
@@ -59,7 +59,7 @@ export function findUpNextId(
 
 export function findUpNextTermId(
   progress: ProgressMap,
-  focusMode: FocusMode = "all",
+  focusMode: FocusMode = "blender",
 ): string | null {
   const focusSet = focusAllowedIds(focusMode);
   const terms = [1, 2, 3, 4, 5, 6, 7, 8].map((n) => `t${n}`);
