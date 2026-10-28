@@ -15,14 +15,20 @@ export function ChecklistItem({
   const status = getStatus(item.id);
   const done = status === "done";
   const dismissed = status === "dismissed";
+  const inProgress = status === "in_progress";
+  const reference = status === "reference";
 
   return (
     <li
       className={`group border-b border-[var(--line)] py-3.5 last:border-b-0 ${
-        isUpNext && !dismissed
+        isUpNext && !dismissed && !reference
           ? "bg-[color-mix(in_oklab,var(--highlight)_28%,transparent)] -mx-2 rounded-md px-2"
           : ""
-      } ${dismissed ? "opacity-55" : ""}`}
+      } ${dismissed || reference ? "opacity-55" : ""} ${
+        inProgress
+          ? "bg-[color-mix(in_oklab,var(--highlight)_18%,transparent)] -mx-2 rounded-md px-2"
+          : ""
+      }`}
     >
       <div className="flex items-start gap-3">
         <button
@@ -67,7 +73,12 @@ export function ChecklistItem({
             aria-label={`Open details: ${item.title}`}
           >
             <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-              {isUpNext && !dismissed && (
+              {inProgress && (
+                <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-accent">
+                  In progress
+                </span>
+              )}
+              {isUpNext && !dismissed && !reference && !inProgress && (
                 <span className="up-next-pulse text-[10px] font-semibold uppercase tracking-[0.14em] text-accent">
                   Up next
                 </span>
@@ -77,9 +88,14 @@ export function ChecklistItem({
                   Dismissed
                 </span>
               )}
+              {reference && (
+                <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted">
+                  Reference
+                </span>
+              )}
               <p
                 className={`text-[15px] leading-snug sm:text-base ${
-                  done || dismissed
+                  done || dismissed || reference
                     ? "text-muted line-through decoration-mist"
                     : "text-ink group-hover:text-accent"
                 }`}

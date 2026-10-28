@@ -62,6 +62,20 @@ export function AppHeader() {
           )}
           {showFocus && (
             <Link
+              href="/reference"
+              aria-label="Reference"
+              title="Reference"
+              className={`inline-flex shrink-0 items-center rounded-sm px-1.5 py-1 text-ink-soft hover:text-ink ${
+                pathname === "/reference" ? "text-ink" : ""
+              }`}
+            >
+              <span className="text-[11px] font-medium sm:text-xs">
+                Reference
+              </span>
+            </Link>
+          )}
+          {showFocus && (
+            <Link
               href="/settings"
               aria-label="Settings"
               title="Settings"
