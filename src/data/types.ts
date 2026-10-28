@@ -91,11 +91,26 @@ export interface Track {
   portfolioTarget: string;
 }
 
+/**
+ * Soft landmark on the single roadmap (not Year/Term UI).
+ * `formerTermId` keeps migration/debug linkage; hidden from labels.
+ */
+export interface RoadmapSection {
+  id: string;
+  title: string;
+  blurb?: string;
+  /** Former term id (t1–t8) for redirects / anchors — not shown as “Term”. */
+  formerTermId: string;
+  modules: Module[];
+}
+
 export interface Program {
   title: string;
   shortTitle: string;
   tagline: string;
+  /** @deprecated Nav is a single roadmap; kept for data/migration only. */
   years: Year[];
+  /** Ordered curriculum chunks (former terms); UI uses roadmapSections(). */
   terms: Term[];
   foundations: Module[];
   tracks: Track[];

@@ -61,18 +61,10 @@ export default function ItemDetailPage() {
       </div>
 
       <p className="mt-2 text-xs text-muted">
-        {loc.kind === "term" ? (
+        {loc.kind === "roadmap" ? (
           <>
-            {loc.year && (
-              <>
-                <Link href={`/year/${loc.year.id}`} className="hover:text-accent">
-                  {loc.year.title}
-                </Link>
-                <span aria-hidden> · </span>
-              </>
-            )}
             <Link href={backHref} className="hover:text-accent">
-              {loc.term.title}
+              {loc.section.title}
             </Link>
             <span aria-hidden> · </span>
             {module.title}
@@ -80,7 +72,7 @@ export default function ItemDetailPage() {
         ) : (
           <>
             <Link href={backHref} className="hover:text-accent">
-              Foundational material
+              Foundations
             </Link>
             <span aria-hidden> · </span>
             {module.title}

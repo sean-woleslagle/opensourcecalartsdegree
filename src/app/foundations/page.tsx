@@ -19,16 +19,17 @@ export default function FoundationsPage() {
   return (
     <div>
       <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted">
-        Reference
+        Reference · not on the main roadmap
       </p>
       <h1
         className="mt-2 font-display text-3xl font-800 tracking-tight text-ink sm:text-4xl"
         style={{ fontWeight: 800 }}
       >
-        Foundational material
+        Foundations
       </h1>
       <p className="mt-2 max-w-prose text-ink-soft">
-        Sit beside the main path. Use as needed — weighting shifts as you go.
+        Drawing, design, story, and production literacy — use as needed beside
+        the main roadmap.
       </p>
       <div className="mt-6">
         <ProgressMeter
