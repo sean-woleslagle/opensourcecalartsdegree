@@ -118,7 +118,7 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
               map[row.item_id] = entryFromRow(row);
             }
           }
-          // One-time Sean course-path seed (done / in progress / reference / dismiss alts).
+          // Sean course-path seed (v2+): corrections overwrite wrong ids; rest fill open only.
           if (!hasCoursePathSeedRan()) {
             const seeded = applyCoursePathSeed(map);
             map = seeded.map;

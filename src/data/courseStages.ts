@@ -19,19 +19,20 @@ function course(
  */
 export const COURSE_STAGE_DEFS: CourseStageDef[] = [
   {
-    id: "abbitt",
-    title: "Grant Abbitt — Blender basics",
+    id: "cgcookie-beginner",
+    title: "CG Cookie — Blender Basics",
     blurb:
-      "Free YouTube playlist for Blender navigation and fundamentals. Done when you finished the playlist and can move around without a tutorial open.",
+      "Sean’s first beginner course (done). Free CG Cookie Blender Basics — then CORE Mesh Modeling.",
     order: 1,
     focus: "blender",
     courses: [
       course({
-        id: "course-abbitt",
-        title: "Grant Abbitt — Blender beginner playlist (YouTube)",
+        id: "course-cgcookie-beginner",
+        title: "CG Cookie — Blender Basics / beginner",
         description:
-          "Work through the playlist. When finished, mark done — then use CalArts support below for drawing and first motion practice.",
-        url: "https://www.youtube.com/watch?v=H3BcVxaRgVY&list=PL3GeP3YLZn5hhfaGRSmRia0OwPPMfJu0V",
+          "Finished beginner path. CalArts support below covers navigation drills, original prop, and first motion. (Free Abbitt YouTube is not the starter — GameDev.tv hard surface is later Abbitt/gamedev.tv work.)",
+        url: "https://www.cgcookie.com/collections",
+        findHint: "Collections hub — find free Blender Basics / beginner course",
         order: 1,
       }),
     ],
@@ -134,16 +135,17 @@ export const COURSE_STAGE_DEFS: CourseStageDef[] = [
   },
   {
     id: "hs-gamedev",
-    title: "Hard Surface — GameDev.tv",
-    blurb: "Second hard-surface pass after CG Boost HS.",
+    title: "Hard Surface — GameDev.tv (Abbitt)",
+    blurb:
+      "Queued Abbitt / GameDev.tv hard-surface course (not the free YouTube beginner playlist).",
     order: 7,
     focus: "blender",
     courses: [
       course({
         id: "course-hs-gamedev",
-        title: "Blender Hard Surface (GameDev.tv)",
+        title: "Blender Hard Surface (GameDev.tv / Grant Abbitt)",
         description:
-          "Continue hard-surface craft. Mark done when the course project set is finished.",
+          "Abbitt’s GameDev.tv hard-surface course — continue after CG Boost HS. Mark done when the course project set is finished.",
         url: "https://gamedev.tv/courses/blender-hard-surface/view",
         order: 1,
       }),
