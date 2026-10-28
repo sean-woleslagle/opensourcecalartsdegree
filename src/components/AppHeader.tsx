@@ -48,6 +48,20 @@ export function AppHeader() {
           {showFocus && <FocusModeToggle />}
           {showFocus && (
             <Link
+              href="/foundations"
+              aria-label="Foundations"
+              title="Foundations"
+              className={`inline-flex shrink-0 items-center rounded-sm px-1.5 py-1 text-ink-soft hover:text-ink ${
+                pathname === "/foundations" ? "text-ink" : ""
+              }`}
+            >
+              <span className="text-[11px] font-medium sm:text-xs">
+                Foundations
+              </span>
+            </Link>
+          )}
+          {showFocus && (
+            <Link
               href="/settings"
               aria-label="Settings"
               title="Settings"

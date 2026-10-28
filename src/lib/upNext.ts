@@ -1,6 +1,6 @@
 import {
   orderedProgramItems,
-  getTerm,
+  orderedRoadmapItems,
   itemIdsInTerm,
   program,
 } from "@/data/curriculum";
@@ -10,19 +10,22 @@ import {
 } from "@/lib/focusMode";
 import { isHandled, type ProgressMap } from "@/lib/progress/types";
 
-function focusAllowedIds(mode: FocusMode): Set<string> | null {
+function focusAllowedIds(
+  mode: FocusMode,
+  scope: "roadmap" | "all" = "all",
+): Set<string> | null {
   if (mode === "all") return null;
   const ids = new Set<string>();
-  for (const mod of program.foundations) {
+  const modules =
+    scope === "roadmap"
+      ? program.terms.flatMap((t) => t.modules)
+      : [
+          ...program.terms.flatMap((t) => t.modules),
+          ...program.foundations,
+        ];
+  for (const mod of modules) {
     for (const item of mod.items) {
       if (itemMatchesFocus(item, mode, mod)) ids.add(item.id);
-    }
-  }
-  for (const term of program.terms) {
-    for (const mod of term.modules) {
-      for (const item of mod.items) {
-        if (itemMatchesFocus(item, mode, mod)) ids.add(item.id);
-      }
     }
   }
   return ids;
@@ -34,9 +37,16 @@ function isIncomplete(progress: ProgressMap, id: string): boolean {
 
 export function findUpNextId(
   progress: ProgressMap,
-  scope?: { termId?: string; itemIds?: string[]; focusMode?: FocusMode },
+  scope?: {
+    termId?: string;
+    itemIds?: string[];
+    focusMode?: FocusMode;
+    /** Default true for home: skip Foundations on the main path. */
+    roadmapOnly?: boolean;
+  },
 ): string | null {
-  const ordered = orderedProgramItems();
+  const roadmapOnly = scope?.roadmapOnly ?? false;
+  const ordered = roadmapOnly ? orderedRoadmapItems() : orderedProgramItems();
   let candidates = ordered;
   if (scope?.itemIds) {
     const set = new Set(scope.itemIds);
@@ -46,7 +56,10 @@ export function findUpNextId(
     candidates = ordered.filter((c) => set.has(c.id));
   }
 
-  const focusSet = focusAllowedIds(scope?.focusMode ?? "blender");
+  const focusSet = focusAllowedIds(
+    scope?.focusMode ?? "blender",
+    roadmapOnly ? "roadmap" : "all",
+  );
   if (focusSet) {
     candidates = candidates.filter((c) => focusSet.has(c.id));
   }
@@ -57,19 +70,15 @@ export function findUpNextId(
   return null;
 }
 
-export function findUpNextTermId(
+/** First incomplete roadmap section (former term) under Focus — for scroll anchors. */
+export function findUpNextSectionId(
   progress: ProgressMap,
   focusMode: FocusMode = "blender",
 ): string | null {
-  const focusSet = focusAllowedIds(focusMode);
-  const terms = [1, 2, 3, 4, 5, 6, 7, 8].map((n) => `t${n}`);
-  for (const termId of terms) {
-    const term = getTerm(termId);
-    if (!term) continue;
-    let ids = itemIdsInTerm(termId);
-    if (focusSet) ids = ids.filter((id) => focusSet.has(id));
-    if (ids.length === 0) continue;
-    if (ids.some((id) => isIncomplete(progress, id))) return termId;
+  const focusSet = focusAllowedIds(focusMode, "roadmap");
+  for (const row of orderedRoadmapItems()) {
+    if (focusSet && !focusSet.has(row.id)) continue;
+    if (isIncomplete(progress, row.id)) return row.formerTermId;
   }
   return null;
 }

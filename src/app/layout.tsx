@@ -20,7 +20,7 @@ const figtree = Figtree({
 export const metadata: Metadata = {
   title: "Open-Source CalArts Degree",
   description:
-    "Daily-driver checklist for an independent open-source animation curriculum. Years with nested terms, sync via Supabase.",
+    "Daily-driver checklist for an independent open-source animation curriculum — one roadmap, sync via Supabase.",
   applicationName: "Open-Source CalArts Degree",
   appleWebApp: {
     capable: true,

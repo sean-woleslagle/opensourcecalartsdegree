@@ -1,47 +1,52 @@
 "use client";
 
+import { Suspense } from "react";
 import Link from "next/link";
 import {
   program,
-  getTermsForYear,
-  allItems,
+  roadmapModules,
+  roadmapSections,
 } from "@/data/curriculum";
+import { ModuleList } from "@/components/ModuleList";
 import { ProgressMeter } from "@/components/ProgressMeter";
+import { RoadmapSectionScroll } from "@/components/RoadmapSectionScroll";
 import { useFocusMode } from "@/components/FocusModeProvider";
 import { useProgress } from "@/components/ProgressProvider";
-import { findUpNextId, findUpNextTermId } from "@/lib/upNext";
+import { findUpNextId, findUpNextSectionId } from "@/lib/upNext";
 import { itemMatchesFocus } from "@/lib/focusMode";
 import { isHandled } from "@/lib/progress/types";
 
 export default function HomePage() {
   const { progress, handledCount, ready } = useProgress();
   const { mode, label, filterItemIds } = useFocusMode();
-  const foundationIds = filterItemIds(program.foundations);
-  const allIds =
-    mode === "all"
-      ? allItems().map((i) => i.id)
-      : [
-          ...filterItemIds(program.foundations),
-          ...program.terms.flatMap((t) => filterItemIds(t.modules)),
-        ];
-  const upNextTermId = findUpNextTermId(progress, mode);
-  const upNextId = findUpNextId(progress, { focusMode: mode });
-  const upNextItem = allItems().find((i) => i.id === upNextId);
-  const primaryHref = upNextTermId ? `/term/${upNextTermId}` : "/term/t1";
-  const hasCurriculumProgress = program.terms.some((t) =>
-    t.modules.some((m) =>
-      m.items.some(
-        (item) =>
-          itemMatchesFocus(item, mode, m) &&
-          isHandled(progress[item.id]?.status),
-      ),
+  const sections = roadmapSections();
+  const roadmapIds = filterItemIds(roadmapModules());
+  const upNextId = findUpNextId(progress, {
+    focusMode: mode,
+    roadmapOnly: true,
+  });
+  const upNextSectionId = findUpNextSectionId(progress, mode);
+  const upNextItem = roadmapModules()
+    .flatMap((m) => m.items)
+    .find((i) => i.id === upNextId);
+  const hasCurriculumProgress = roadmapModules().some((m) =>
+    m.items.some(
+      (item) =>
+        itemMatchesFocus(item, mode, m) &&
+        isHandled(progress[item.id]?.status),
     ),
   );
-  const primaryLabel = hasCurriculumProgress ? "Continue" : "Start Term 1";
+  const primaryHref = upNextSectionId
+    ? `/?section=${upNextSectionId}`
+    : "/?section=t1";
+  const primaryLabel = hasCurriculumProgress ? "Continue" : "Start roadmap";
 
   return (
     <div>
-      <section className="relative overflow-hidden pb-10 pt-6 sm:pb-14 sm:pt-10">
+      <Suspense fallback={null}>
+        <RoadmapSectionScroll ready={ready} />
+      </Suspense>
+      <section className="relative overflow-hidden pb-8 pt-6 sm:pb-10 sm:pt-10">
         <div
           aria-hidden
           className="pointer-events-none absolute -right-16 -top-10 h-56 w-56 rounded-full bg-[color-mix(in_oklab,var(--highlight)_45%,transparent)] blur-3xl"
@@ -77,102 +82,62 @@ export default function HomePage() {
 
       <section className="mb-8">
         <ProgressMeter
-          done={handledCount(allIds)}
-          total={allIds.length}
-          label={mode === "all" ? "Whole program" : `${label} focus`}
+          done={handledCount(roadmapIds)}
+          total={roadmapIds.length}
+          label={mode === "all" ? "Roadmap" : `${label} focus`}
         />
       </section>
 
-      <section className="space-y-3">
-        <h2
-          className="font-display text-sm font-700 uppercase tracking-[0.16em] text-muted"
-          style={{ fontWeight: 700 }}
-        >
-          Years
-        </h2>
-        <ol className="divide-y divide-[var(--line)] border-y border-[var(--line)]">
-          {program.years.map((year, idx) => {
-            const terms = getTermsForYear(year.id);
-            const ids = filterItemIds(terms.flatMap((t) => t.modules));
-            const done = handledCount(ids);
-            return (
-              <li
-                key={year.id}
-                className="animate-rise py-5"
-                style={{ animationDelay: `${0.05 * idx}s` }}
-              >
-                <Link href={`/year/${year.id}`} className="block group">
-                  <div className="flex items-baseline justify-between gap-3">
-                    <h3
-                      className="font-display text-2xl font-700 text-ink group-hover:text-accent"
-                      style={{ fontWeight: 700 }}
-                    >
-                      {year.title}
-                    </h3>
-                    <span className="text-sm tabular-nums text-muted">
-                      {ready ? `${done}/${ids.length}` : "—"}
-                    </span>
-                  </div>
-                  <p className="mt-1 text-sm text-muted">{year.focus}</p>
-                  <p className="mt-2 text-sm text-ink-soft">
-                    Terms {terms.map((t) => t.number).join(" · ")}
-                    <span className="text-muted"> — nested inside</span>
-                  </p>
-                  <div className="mt-3">
-                    <ProgressMeter done={done} total={ids.length} label="Year" />
-                  </div>
-                </Link>
-                <ul className="mt-3 flex flex-wrap gap-2">
-                  {terms.map((t) => {
-                    const tIds = filterItemIds(t.modules);
-                    const tDone = handledCount(tIds);
-                    const active = upNextTermId === t.id;
-                    return (
-                      <li key={t.id}>
-                        <Link
-                          href={`/term/${t.id}`}
-                          className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition ${
-                            active
-                              ? "bg-highlight text-ink"
-                              : "bg-paper-deep/80 text-ink-soft hover:bg-mist/60"
-                          }`}
-                        >
-                          T{t.number}
-                          <span className="tabular-nums opacity-70">
-                            {ready ? `${tDone}/${tIds.length}` : ""}
-                          </span>
-                        </Link>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </li>
-            );
-          })}
-        </ol>
-      </section>
+      <p className="mb-6 text-xs text-muted">
+        Recommended order — skip ahead anytime. Mark unused alternate paths as
+        dismissed so Up next stays honest.
+      </p>
 
-      <section className="mt-10 border-t border-[var(--line)] pt-8">
-        <Link href="/foundations" className="group block">
-          <h2
-            className="font-display text-xl font-700 text-ink group-hover:text-accent"
-            style={{ fontWeight: 700 }}
-          >
-            Foundational material
-          </h2>
-          <p className="mt-1 text-sm text-muted">
-            Drawing, design, animation, story, context, production — reference
-            alongside the main path.
-          </p>
-          <div className="mt-3">
-            <ProgressMeter
-              done={handledCount(foundationIds)}
-              total={foundationIds.length}
-              label="Foundational material"
-            />
-          </div>
-        </Link>
-      </section>
+      <div className="space-y-12">
+        {sections.map((section, idx) => {
+          const sectionIds = filterItemIds(section.modules);
+          if (sectionIds.length === 0) return null;
+          const done = handledCount(sectionIds);
+          const isUpNextSection = upNextSectionId === section.formerTermId;
+          return (
+            <section
+              key={section.id}
+              id={section.id}
+              className="animate-rise scroll-mt-20"
+              style={{ animationDelay: `${0.04 * idx}s` }}
+            >
+              <div className="mb-4 flex items-baseline justify-between gap-3 border-b border-[var(--line)] pb-3">
+                <div>
+                  <h2
+                    className="font-display text-xl font-700 tracking-tight text-ink sm:text-2xl"
+                    style={{ fontWeight: 700 }}
+                  >
+                    {section.title}
+                    {isUpNextSection && ready && upNextId && (
+                      <span className="ml-2 align-middle text-[10px] font-semibold uppercase tracking-[0.14em] text-accent">
+                        Up next
+                      </span>
+                    )}
+                  </h2>
+                  {section.blurb && (
+                    <p className="mt-1 max-w-prose text-sm text-muted">
+                      {section.blurb}
+                    </p>
+                  )}
+                </div>
+                <span className="shrink-0 text-sm tabular-nums text-muted">
+                  {ready ? `${done}/${sectionIds.length}` : "—"}
+                </span>
+              </div>
+              <ModuleList
+                modules={section.modules}
+                upNextId={upNextId}
+                emptyLabel={`Nothing in this section for ${label} yet.`}
+              />
+            </section>
+          );
+        })}
+      </div>
     </div>
   );
 }

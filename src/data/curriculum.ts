@@ -2,6 +2,7 @@ import type {
   CurriculumItem,
   Module,
   Program,
+  RoadmapSection,
   Term,
   Year,
 } from "./types";
@@ -9,10 +10,48 @@ import { withDetails } from "./itemDetails";
 
 /**
  * Structured curriculum for the daily-driver app.
- * Year 1 starts animating early in Blender; optional deeper modeling/sculpt/rig practice sits beside it.
- * Years 2–3 deepen craft, pipeline, portfolio, and launch.
+ * Recommended order is former Term 1→8 as one scrollable roadmap (no Year/Term UI).
  * Full path (no A–H track branching); focusMode tags: blender | traditional | both.
  */
+
+/** Soft section titles for the flat roadmap (ADHD landmarks — not calendar years/terms). */
+const ROADMAP_SECTION_META: Record<
+  string,
+  { title: string; blurb: string }
+> = {
+  t1: {
+    title: "Getting started in Blender",
+    blurb: "Navigation, first keyframes, and a simple silent story.",
+  },
+  t2: {
+    title: "First short film",
+    blurb: "Body mechanics, materials, boards — then a tiny 15–30s short.",
+  },
+  t3: {
+    title: "Acting & craft range",
+    blurb: "Clear intention, cameras, and a couple of short craft experiments.",
+  },
+  t4: {
+    title: "Deeper craft & collaboration",
+    blurb: "Push one craft harder and get at least one other person into your files.",
+  },
+  t5: {
+    title: "Harder problems",
+    blurb: "Assignments that expose weak spots, rebuild after critique, benchmark write-up.",
+  },
+  t6: {
+    title: "Production practice",
+    blurb: "Studio-style or indie path — mark the unused path dismissed.",
+  },
+  t7: {
+    title: "Capstone & portfolio",
+    blurb: "A scoped piece that supports the job you want, plus docs.",
+  },
+  t8: {
+    title: "Portfolio & next steps",
+    blurb: "Curate, get outside review, and ship applications or outreach.",
+  },
+};
 export const program: Program = {
   title: "Open-Source CalArts Degree",
   shortTitle: "CalArts Degree",
@@ -1783,13 +1822,33 @@ export function getTerm(termId: string) {
   return program.terms.find((t) => t.id === termId);
 }
 
+/** Flat roadmap: former T1→T8 as soft-titled sections (no Year/Term labels). */
+export function roadmapSections(): RoadmapSection[] {
+  return [...program.terms]
+    .sort((a, b) => a.number - b.number)
+    .map((term) => {
+      const meta = ROADMAP_SECTION_META[term.id];
+      return {
+        id: `section-${term.id}`,
+        title: meta?.title ?? term.title,
+        blurb: meta?.blurb,
+        formerTermId: term.id,
+        modules: term.modules,
+      };
+    });
+}
+
+export function roadmapModules(): Module[] {
+  return roadmapSections().flatMap((s) => s.modules);
+}
+
 export type ItemLocation =
   | {
       item: CurriculumItem;
       module: Module;
+      section: RoadmapSection;
       term: Term;
-      year: Year | undefined;
-      kind: "term";
+      kind: "roadmap";
       backHref: string;
       backLabel: string;
     }
@@ -1797,7 +1856,7 @@ export type ItemLocation =
       item: CurriculumItem;
       module: Module;
       term?: undefined;
-      year?: undefined;
+      section?: undefined;
       kind: "foundations";
       backHref: string;
       backLabel: string;
@@ -1805,19 +1864,19 @@ export type ItemLocation =
 
 /** Resolve a checklist item by id, with nav context for the detail page. */
 export function getItemLocation(itemId: string): ItemLocation | undefined {
-  for (const term of program.terms) {
-    for (const mod of term.modules) {
+  for (const section of roadmapSections()) {
+    for (const mod of section.modules) {
       const found = mod.items.find((i) => i.id === itemId);
       if (found) {
-        const year = program.years.find((y) => y.termIds.includes(term.id));
+        const term = getTerm(section.formerTermId)!;
         return {
           item: withDetails(found),
           module: mod,
+          section,
           term,
-          year,
-          kind: "term",
-          backHref: `/term/${term.id}`,
-          backLabel: `Term ${term.number}`,
+          kind: "roadmap",
+          backHref: `/?section=${section.formerTermId}`,
+          backLabel: "Roadmap",
         };
       }
     }
@@ -1830,7 +1889,7 @@ export function getItemLocation(itemId: string): ItemLocation | undefined {
         module: mod,
         kind: "foundations",
         backHref: "/foundations",
-        backLabel: "Foundational material",
+        backLabel: "Foundations",
       };
     }
   }
@@ -1847,10 +1906,15 @@ export function getTermsForYear(yearId: string) {
 
 export function allItems() {
   const items = [
-    ...program.foundations.flatMap((m) => m.items),
     ...program.terms.flatMap((t) => t.modules.flatMap((m) => m.items)),
+    ...program.foundations.flatMap((m) => m.items),
   ];
   return items;
+}
+
+/** Main roadmap item ids only (excludes Foundations). */
+export function roadmapItemIds() {
+  return roadmapModules().flatMap((m) => m.items.map((i) => i.id));
 }
 
 export function itemIdsInTerm(termId: string) {
@@ -1863,16 +1927,32 @@ export function itemIdsInYear(yearId: string) {
   return getTermsForYear(yearId).flatMap((t) => itemIdsInTerm(t.id));
 }
 
-export function orderedProgramItems() {
-  /** Recommended global order: Term 1→8 first; foundational material as reference after. */
-  const out: { id: string; termId?: string; orderKey: number }[] = [];
+/** Recommended order on the main roadmap (former T1→T8). Foundations are separate. */
+export function orderedRoadmapItems() {
+  const out: { id: string; sectionId: string; formerTermId: string; orderKey: number }[] =
+    [];
   let key = 0;
-  for (const term of [...program.terms].sort((a, b) => a.number - b.number)) {
-    for (const mod of term.modules) {
+  for (const section of roadmapSections()) {
+    for (const mod of section.modules) {
       for (const item of [...mod.items].sort((a, b) => a.order - b.order)) {
-        out.push({ id: item.id, termId: term.id, orderKey: key++ });
+        out.push({
+          id: item.id,
+          sectionId: section.id,
+          formerTermId: section.formerTermId,
+          orderKey: key++,
+        });
       }
     }
+  }
+  return out;
+}
+
+export function orderedProgramItems() {
+  /** Roadmap first; foundational material after (reference path only). */
+  const out: { id: string; termId?: string; orderKey: number }[] = [];
+  let key = 0;
+  for (const row of orderedRoadmapItems()) {
+    out.push({ id: row.id, termId: row.formerTermId, orderKey: key++ });
   }
   for (const mod of program.foundations) {
     for (const item of [...mod.items].sort((a, b) => a.order - b.order)) {
