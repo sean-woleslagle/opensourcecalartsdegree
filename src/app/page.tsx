@@ -57,7 +57,7 @@ export default function HomePage() {
   );
   const primaryHref = upNextSectionId
     ? `/?section=${upNextSectionId}`
-    : "/?section=abbitt";
+    : "/?section=cgcookie-beginner";
   const primaryLabel = hasCurriculumProgress ? "Continue" : "Start roadmap";
 
   return (

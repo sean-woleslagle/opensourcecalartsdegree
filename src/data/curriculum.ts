@@ -376,7 +376,7 @@ export const program: Program = {
           focus: "blender",
           title: "CalArts support — navigation & first props",
           blurb:
-            "Alongside Abbitt: prove navigation, finish an original prop, then keyframes. Old CG Cookie / CG Boost beginner pick-ones are dismissed — Abbitt is the path.",
+            "Alongside CG Cookie Basics: prove navigation, finish an original prop, then keyframes. CG Boost free beginner and free Abbitt YouTube are dismissed alts — CG Cookie beginner was the path.",
           items: [
             {
               id: "t1-nav",
@@ -388,8 +388,8 @@ export const program: Program = {
             },
             {
               id: "t1-cgcookie",
-              title: "Option A: CG Cookie Blender Basics (free) — dismissed alternate",
-              description: "Obsolete beginner alternate — Abbitt is the path. Keep dismissed unless you intentionally reopen it.",
+              title: "CG Cookie Blender Basics (free) — done beginner path",
+              description: "Sean’s first beginner course (done). Same work as the spine stage “CG Cookie — Blender Basics.” Free Abbitt YouTube is not the starter; Abbitt/GameDev.tv hard surface comes later in the queue.",
               kind: "resource",
               order: 2,
               url: "https://www.cgcookie.com/collections",
@@ -400,7 +400,7 @@ export const program: Program = {
             {
               id: "t1-cgboost",
               title: "Option B: CG Boost — Blender for Beginners (free) — dismissed alternate",
-              description: "Obsolete beginner alternate — Abbitt is the path. Keep dismissed unless you intentionally reopen it.",
+              description: "Competing free beginner course Sean did not take — keep dismissed. CG Cookie Basics was the starter.",
               kind: "resource",
               order: 3,
               url: "https://www.cgboost.com/courses/free-blender-beginners-course",
@@ -409,8 +409,8 @@ export const program: Program = {
             },
             {
               id: "t1-finish-course",
-              title: "After Abbitt: one original prop (not a tutorial copy)",
-              description: "After the Abbitt playlist, model a different simple object with no step-by-step video open. Tutorials teach tools; original pieces teach judgment.",
+              title: "After CG Cookie Basics: one original prop (not a tutorial copy)",
+              description: "After CG Cookie Basics, model a different simple object with no step-by-step video open. Tutorials teach tools; original pieces teach judgment.",
               kind: "project",
               order: 4,
               provenance: "perplexity",
