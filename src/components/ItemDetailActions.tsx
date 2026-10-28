@@ -3,11 +3,13 @@
 import { useEffect, useState } from "react";
 import type { CurriculumItem } from "@/data/types";
 import { useProgress } from "./ProgressProvider";
+import type { ItemStatus } from "@/lib/progress/types";
 
 export function ItemDetailActions({ item }: { item: CurriculumItem }) {
   const {
     getStatus,
     getNotes,
+    setStatus,
     setDone,
     dismiss,
     undismiss,
@@ -16,6 +18,8 @@ export function ItemDetailActions({ item }: { item: CurriculumItem }) {
   const status = getStatus(item.id);
   const done = status === "done";
   const dismissed = status === "dismissed";
+  const inProgress = status === "in_progress";
+  const reference = status === "reference";
   const notes = getNotes(item.id);
   const [draft, setDraft] = useState(notes);
   const showNotes = Boolean(item.notesEnabled) || Boolean(notes) || true;
@@ -23,6 +27,10 @@ export function ItemDetailActions({ item }: { item: CurriculumItem }) {
   useEffect(() => {
     setDraft(notes);
   }, [notes]);
+
+  function setTo(next: ItemStatus) {
+    void setStatus(item.id, next);
+  }
 
   return (
     <div className="space-y-4">
@@ -59,6 +67,32 @@ export function ItemDetailActions({ item }: { item: CurriculumItem }) {
           {done ? "Done" : "Mark done"}
         </button>
 
+        <button
+          type="button"
+          aria-pressed={inProgress}
+          onClick={() => setTo(inProgress ? "open" : "in_progress")}
+          className={`inline-flex min-h-11 items-center rounded-md px-3.5 text-sm font-medium transition ${
+            inProgress
+              ? "bg-highlight text-ink"
+              : "text-muted hover:bg-paper-deep hover:text-ink"
+          }`}
+        >
+          {inProgress ? "In progress" : "Mark in progress"}
+        </button>
+
+        <button
+          type="button"
+          aria-pressed={reference}
+          onClick={() => setTo(reference ? "open" : "reference")}
+          className={`inline-flex min-h-11 items-center rounded-md px-3.5 text-sm font-medium transition ${
+            reference
+              ? "bg-paper-deep text-ink"
+              : "text-muted hover:bg-paper-deep hover:text-ink"
+          }`}
+        >
+          {reference ? "On reference shelf" : "Mark reference"}
+        </button>
+
         {dismissed ? (
           <button
             type="button"
@@ -80,7 +114,18 @@ export function ItemDetailActions({ item }: { item: CurriculumItem }) {
 
       {dismissed && (
         <p className="text-sm text-muted">
-          Dismissed — hidden from the term list unless you show dismissed items.
+          Dismissed — hidden from lists unless you show dismissed items.
+        </p>
+      )}
+      {inProgress && (
+        <p className="text-sm text-muted">
+          In progress — shows as active on the course roadmap.
+        </p>
+      )}
+      {reference && (
+        <p className="text-sm text-muted">
+          Reference — treated as off the main path (see Reference in the
+          header).
         </p>
       )}
 

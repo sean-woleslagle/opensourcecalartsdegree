@@ -58,6 +58,10 @@ export default function ItemDetailPage() {
         {focus && <span>· {focus}</span>}
         {status === "done" && <span className="text-accent">· done</span>}
         {status === "dismissed" && <span>· dismissed</span>}
+        {status === "in_progress" && (
+          <span className="text-accent">· in progress</span>
+        )}
+        {status === "reference" && <span>· reference</span>}
       </div>
 
       <p className="mt-2 text-xs text-muted">
@@ -65,6 +69,14 @@ export default function ItemDetailPage() {
           <>
             <Link href={backHref} className="hover:text-accent">
               {loc.section.title}
+            </Link>
+            <span aria-hidden> · </span>
+            {module.title}
+          </>
+        ) : loc.kind === "reference" ? (
+          <>
+            <Link href={backHref} className="hover:text-accent">
+              Reference
             </Link>
             <span aria-hidden> · </span>
             {module.title}

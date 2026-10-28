@@ -7,6 +7,7 @@ import {
   roadmapModules,
   roadmapSections,
 } from "@/data/curriculum";
+import { ChecklistItem } from "@/components/ChecklistItem";
 import { ModuleList } from "@/components/ModuleList";
 import { ProgressMeter } from "@/components/ProgressMeter";
 import { RoadmapSectionScroll } from "@/components/RoadmapSectionScroll";
@@ -14,10 +15,28 @@ import { useFocusMode } from "@/components/FocusModeProvider";
 import { useProgress } from "@/components/ProgressProvider";
 import { findUpNextId, findUpNextSectionId } from "@/lib/upNext";
 import { itemMatchesFocus } from "@/lib/focusMode";
-import { isHandled } from "@/lib/progress/types";
+import { isHandled, type ItemStatus } from "@/lib/progress/types";
+
+function stageBadge(
+  statuses: ItemStatus[],
+): { label: string; className: string } | null {
+  if (statuses.some((s) => s === "in_progress")) {
+    return {
+      label: "In progress",
+      className: "bg-highlight text-ink",
+    };
+  }
+  if (statuses.length > 0 && statuses.every((s) => s === "done" || s === "dismissed")) {
+    return {
+      label: "Done",
+      className: "bg-accent/15 text-accent",
+    };
+  }
+  return null;
+}
 
 export default function HomePage() {
-  const { progress, handledCount, ready } = useProgress();
+  const { progress, handledCount, ready, getStatus } = useProgress();
   const { mode, label, filterItemIds } = useFocusMode();
   const sections = roadmapSections();
   const roadmapIds = filterItemIds(roadmapModules());
@@ -38,7 +57,7 @@ export default function HomePage() {
   );
   const primaryHref = upNextSectionId
     ? `/?section=${upNextSectionId}`
-    : "/?section=t1";
+    : "/?section=abbitt";
   const primaryLabel = hasCurriculumProgress ? "Continue" : "Start roadmap";
 
   return (
@@ -89,16 +108,27 @@ export default function HomePage() {
       </section>
 
       <p className="mb-6 text-xs text-muted">
-        Recommended order — skip ahead anytime. Mark unused alternate paths as
-        dismissed so Up next stays honest.
+        Course order is recommended — skip ahead anytime. CalArts practice sits
+        under each course. Mark unused alternates dismissed so Up next stays
+        honest.
       </p>
 
-      <div className="space-y-12">
+      <div className="space-y-14">
         {sections.map((section, idx) => {
-          const sectionIds = filterItemIds(section.modules);
+          const courseMod = {
+            id: `course-mod-${section.stageId}`,
+            title: "Course",
+            focus: "blender" as const,
+            items: section.courses,
+          };
+          const sectionMods = [courseMod, ...section.modules];
+          const sectionIds = filterItemIds(sectionMods);
           if (sectionIds.length === 0) return null;
           const done = handledCount(sectionIds);
-          const isUpNextSection = upNextSectionId === section.formerTermId;
+          const courseStatuses = section.courses.map((c) => getStatus(c.id));
+          const badge = ready ? stageBadge(courseStatuses) : null;
+          const isUpNextSection = upNextSectionId === section.stageId;
+
           return (
             <section
               key={section.id}
@@ -108,20 +138,34 @@ export default function HomePage() {
             >
               <div className="mb-4 flex items-baseline justify-between gap-3 border-b border-[var(--line)] pb-3">
                 <div>
-                  <h2
-                    className="font-display text-xl font-700 tracking-tight text-ink sm:text-2xl"
-                    style={{ fontWeight: 700 }}
-                  >
-                    {section.title}
-                    {isUpNextSection && ready && upNextId && (
-                      <span className="ml-2 align-middle text-[10px] font-semibold uppercase tracking-[0.14em] text-accent">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h2
+                      className="font-display text-xl font-700 tracking-tight text-ink sm:text-2xl"
+                      style={{ fontWeight: 700 }}
+                    >
+                      {section.title}
+                    </h2>
+                    {badge && (
+                      <span
+                        className={`rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] ${badge.className}`}
+                      >
+                        {badge.label}
+                      </span>
+                    )}
+                    {isUpNextSection && ready && upNextId && !badge && (
+                      <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-accent">
                         Up next
                       </span>
                     )}
-                  </h2>
+                  </div>
                   {section.blurb && (
                     <p className="mt-1 max-w-prose text-sm text-muted">
                       {section.blurb}
+                    </p>
+                  )}
+                  {section.pickOne && (
+                    <p className="mt-1 text-xs font-medium text-warn">
+                      Pick one course — dismiss the other when you choose.
                     </p>
                   )}
                 </div>
@@ -129,11 +173,47 @@ export default function HomePage() {
                   {ready ? `${done}/${sectionIds.length}` : "—"}
                 </span>
               </div>
-              <ModuleList
-                modules={section.modules}
-                upNextId={upNextId}
-                emptyLabel={`Nothing in this section for ${label} yet.`}
-              />
+
+              <div className="mb-6">
+                <h3
+                  className="font-display text-sm font-700 uppercase tracking-[0.14em] text-muted"
+                  style={{ fontWeight: 700 }}
+                >
+                  Course
+                </h3>
+                <ul className={`mt-2 ${ready ? "" : "opacity-60"}`}>
+                  {[...section.courses]
+                    .sort((a, b) => a.order - b.order)
+                    .filter(
+                      (item) =>
+                        itemMatchesFocus(item, mode, courseMod) &&
+                        getStatus(item.id) !== "dismissed",
+                    )
+                    .map((item) => (
+                      <ChecklistItem
+                        key={item.id}
+                        item={item}
+                        isUpNext={upNextId === item.id}
+                      />
+                    ))}
+                </ul>
+              </div>
+
+              {section.modules.length > 0 && (
+                <div>
+                  <h3
+                    className="mb-3 font-display text-sm font-700 uppercase tracking-[0.14em] text-muted"
+                    style={{ fontWeight: 700 }}
+                  >
+                    CalArts support
+                  </h3>
+                  <ModuleList
+                    modules={section.modules}
+                    upNextId={upNextId}
+                    emptyLabel={`Nothing in CalArts support for ${label} yet.`}
+                  />
+                </div>
+              )}
             </section>
           );
         })}

@@ -3,12 +3,16 @@ import {
   orderedRoadmapItems,
   itemIdsInTerm,
   program,
+  roadmapModules,
 } from "@/data/curriculum";
 import {
   itemMatchesFocus,
   type FocusMode,
 } from "@/lib/focusMode";
-import { isHandled, type ProgressMap } from "@/lib/progress/types";
+import {
+  isIncomplete,
+  type ProgressMap,
+} from "@/lib/progress/types";
 
 function focusAllowedIds(
   mode: FocusMode,
@@ -18,10 +22,11 @@ function focusAllowedIds(
   const ids = new Set<string>();
   const modules =
     scope === "roadmap"
-      ? program.terms.flatMap((t) => t.modules)
+      ? roadmapModules()
       : [
-          ...program.terms.flatMap((t) => t.modules),
+          ...roadmapModules(),
           ...program.foundations,
+          ...program.reference,
         ];
   for (const mod of modules) {
     for (const item of mod.items) {
@@ -31,8 +36,8 @@ function focusAllowedIds(
   return ids;
 }
 
-function isIncomplete(progress: ProgressMap, id: string): boolean {
-  return !isHandled(progress[id]?.status);
+function stillTodo(progress: ProgressMap, id: string): boolean {
+  return isIncomplete(progress[id]?.status);
 }
 
 export function findUpNextId(
@@ -41,7 +46,7 @@ export function findUpNextId(
     termId?: string;
     itemIds?: string[];
     focusMode?: FocusMode;
-    /** Default true for home: skip Foundations on the main path. */
+    /** Default true for home: skip Foundations / Reference on the main path. */
     roadmapOnly?: boolean;
   },
 ): string | null {
@@ -64,13 +69,17 @@ export function findUpNextId(
     candidates = candidates.filter((c) => focusSet.has(c.id));
   }
 
+  // Prefer an in-progress course so concurrent work stays visible.
   for (const c of candidates) {
-    if (isIncomplete(progress, c.id)) return c.id;
+    if (progress[c.id]?.status === "in_progress") return c.id;
+  }
+  for (const c of candidates) {
+    if (stillTodo(progress, c.id)) return c.id;
   }
   return null;
 }
 
-/** First incomplete roadmap section (former term) under Focus — for scroll anchors. */
+/** First incomplete course stage id under Focus — for scroll anchors. */
 export function findUpNextSectionId(
   progress: ProgressMap,
   focusMode: FocusMode = "blender",
@@ -78,7 +87,7 @@ export function findUpNextSectionId(
   const focusSet = focusAllowedIds(focusMode, "roadmap");
   for (const row of orderedRoadmapItems()) {
     if (focusSet && !focusSet.has(row.id)) continue;
-    if (isIncomplete(progress, row.id)) return row.formerTermId;
+    if (stillTodo(progress, row.id)) return row.stageId;
   }
   return null;
 }

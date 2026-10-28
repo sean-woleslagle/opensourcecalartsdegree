@@ -7,55 +7,32 @@ import type {
   Year,
 } from "./types";
 import { withDetails } from "./itemDetails";
+import {
+  COURSE_STAGE_DEFS,
+  REFERENCE_ITEMS,
+  REFERENCE_MODULE_ID,
+} from "./courseStages";
 
 /**
  * Structured curriculum for the daily-driver app.
- * Recommended order is former Term 1→8 as one scrollable roadmap (no Year/Term UI).
- * Full path (no A–H track branching); focusMode tags: blender | traditional | both.
+ * Main scroll = Sean’s Blender course spine; CalArts checklist nests under each stage.
+ * Foundations + Reference are header routes. Focus: blender | traditional | both.
  */
-
-/** Soft section titles for the flat roadmap (ADHD landmarks — not calendar years/terms). */
-const ROADMAP_SECTION_META: Record<
-  string,
-  { title: string; blurb: string }
-> = {
-  t1: {
-    title: "Getting started in Blender",
-    blurb: "Navigation, first keyframes, and a simple silent story.",
-  },
-  t2: {
-    title: "First short film",
-    blurb: "Body mechanics, materials, boards — then a tiny 15–30s short.",
-  },
-  t3: {
-    title: "Acting & craft range",
-    blurb: "Clear intention, cameras, and a couple of short craft experiments.",
-  },
-  t4: {
-    title: "Deeper craft & collaboration",
-    blurb: "Push one craft harder and get at least one other person into your files.",
-  },
-  t5: {
-    title: "Harder problems",
-    blurb: "Assignments that expose weak spots, rebuild after critique, benchmark write-up.",
-  },
-  t6: {
-    title: "Production practice",
-    blurb: "Studio-style or indie path — mark the unused path dismissed.",
-  },
-  t7: {
-    title: "Capstone & portfolio",
-    blurb: "A scoped piece that supports the job you want, plus docs.",
-  },
-  t8: {
-    title: "Portfolio & next steps",
-    blurb: "Curate, get outside review, and ship applications or outreach.",
-  },
-};
 export const program: Program = {
   title: "Open-Source CalArts Degree",
   shortTitle: "CalArts Degree",
-  tagline: "A 1–3 year independent animation path — Blender-first, checklist-driven.",
+  tagline:
+    "Your Blender courses in order — with CalArts practice under each stage.",
+  reference: [
+    {
+      id: REFERENCE_MODULE_ID,
+      focus: "blender",
+      title: "Reference shelf",
+      blurb:
+        "Not on the main path. Launch Pad and the Secrets ebook stay here for refreshers.",
+      items: REFERENCE_ITEMS,
+    },
+  ],
   years: [
     {
       id: "y1",
@@ -397,8 +374,9 @@ export const program: Program = {
         {
           id: "t1-onboard",
           focus: "blender",
-          title: "Learn Blender (pick one beginner course)",
-          blurb: "Weeks 1–2. Finish one free beginner course, then make something original. Mark the course you did not pick as dismissed.",
+          title: "CalArts support — navigation & first props",
+          blurb:
+            "Alongside Abbitt: prove navigation, finish an original prop, then keyframes. Old CG Cookie / CG Boost beginner pick-ones are dismissed — Abbitt is the path.",
           items: [
             {
               id: "t1-nav",
@@ -410,27 +388,29 @@ export const program: Program = {
             },
             {
               id: "t1-cgcookie",
-              title: "Option A: CG Cookie Blender Basics (free)",
-              description: "Pick this OR CG Boost — not both. Free account. Covers navigation, modeling, materials, lighting, render, and a bit of animation. Open the collections page and find Blender Basics. If you chose CG Boost instead, mark this dismissed.",
+              title: "Option A: CG Cookie Blender Basics (free) — dismissed alternate",
+              description: "Obsolete beginner alternate — Abbitt is the path. Keep dismissed unless you intentionally reopen it.",
               kind: "resource",
               order: 2,
               url: "https://www.cgcookie.com/collections",
               findHint: "Collections hub — find a free Blender Basics / beginner course",
               provenance: "both",
+              optional: true,
             },
             {
               id: "t1-cgboost",
-              title: "Option B: CG Boost — Blender for Beginners (free)",
-              description: "Pick this OR CG Cookie — not both. About 5 hours: interface, modeling, texturing, lighting, rendering (apple still life). Do not also finish a second identical beginner course. If you chose CG Cookie instead, mark this dismissed.",
+              title: "Option B: CG Boost — Blender for Beginners (free) — dismissed alternate",
+              description: "Obsolete beginner alternate — Abbitt is the path. Keep dismissed unless you intentionally reopen it.",
               kind: "resource",
               order: 3,
               url: "https://www.cgboost.com/courses/free-blender-beginners-course",
               provenance: "both",
+              optional: true,
             },
             {
               id: "t1-finish-course",
-              title: "Finish one beginner course + one original prop (not a tutorial copy)",
-              description: "After the course, model a different simple object with no step-by-step video open. Tutorials teach tools; original pieces teach judgment.",
+              title: "After Abbitt: one original prop (not a tutorial copy)",
+              description: "After the Abbitt playlist, model a different simple object with no step-by-step video open. Tutorials teach tools; original pieces teach judgment.",
               kind: "project",
               order: 4,
               provenance: "perplexity",
@@ -1822,24 +1802,53 @@ export function getTerm(termId: string) {
   return program.terms.find((t) => t.id === termId);
 }
 
-/** Flat roadmap: former T1→T8 as soft-titled sections (no Year/Term labels). */
-export function roadmapSections(): RoadmapSection[] {
-  return [...program.terms]
-    .sort((a, b) => a.number - b.number)
-    .map((term) => {
-      const meta = ROADMAP_SECTION_META[term.id];
-      return {
-        id: `section-${term.id}`,
-        title: meta?.title ?? term.title,
-        blurb: meta?.blurb,
-        formerTermId: term.id,
-        modules: term.modules,
-      };
-    });
+/** All CalArts modules keyed by id (from former terms). */
+function moduleIndex(): Map<string, Module> {
+  const map = new Map<string, Module>();
+  for (const term of program.terms) {
+    for (const mod of term.modules) {
+      map.set(mod.id, mod);
+    }
+  }
+  return map;
 }
 
+/** Synthetic module wrapper so course rows share ChecklistItem / focus helpers. */
+function coursesAsModule(stageId: string, courses: CurriculumItem[]): Module {
+  return {
+    id: `course-mod-${stageId}`,
+    title: "Course",
+    focus: "blender",
+    items: courses,
+  };
+}
+
+/**
+ * Course-first roadmap: each section is a course stage with nested CalArts support.
+ */
+export function roadmapSections(): RoadmapSection[] {
+  const mods = moduleIndex();
+  return [...COURSE_STAGE_DEFS]
+    .sort((a, b) => a.order - b.order)
+    .map((stage) => ({
+      id: `section-${stage.id}`,
+      stageId: stage.id,
+      title: stage.title,
+      blurb: stage.blurb,
+      courses: stage.courses,
+      pickOne: stage.pickOne,
+      modules: stage.supportModuleIds
+        .map((id) => mods.get(id))
+        .filter((m): m is Module => Boolean(m)),
+    }));
+}
+
+/** Course rows + CalArts support modules (for focus filters / progress). */
 export function roadmapModules(): Module[] {
-  return roadmapSections().flatMap((s) => s.modules);
+  return roadmapSections().flatMap((s) => [
+    coursesAsModule(s.stageId, s.courses),
+    ...s.modules,
+  ]);
 }
 
 export type ItemLocation =
@@ -1847,7 +1856,7 @@ export type ItemLocation =
       item: CurriculumItem;
       module: Module;
       section: RoadmapSection;
-      term: Term;
+      term?: Term;
       kind: "roadmap";
       backHref: string;
       backLabel: string;
@@ -1860,22 +1869,41 @@ export type ItemLocation =
       kind: "foundations";
       backHref: string;
       backLabel: string;
+    }
+  | {
+      item: CurriculumItem;
+      module: Module;
+      term?: undefined;
+      section?: undefined;
+      kind: "reference";
+      backHref: string;
+      backLabel: string;
     };
 
 /** Resolve a checklist item by id, with nav context for the detail page. */
 export function getItemLocation(itemId: string): ItemLocation | undefined {
   for (const section of roadmapSections()) {
+    const courseMod = coursesAsModule(section.stageId, section.courses);
+    const courseHit = courseMod.items.find((i) => i.id === itemId);
+    if (courseHit) {
+      return {
+        item: withDetails(courseHit),
+        module: courseMod,
+        section,
+        kind: "roadmap",
+        backHref: `/?section=${section.stageId}`,
+        backLabel: "Roadmap",
+      };
+    }
     for (const mod of section.modules) {
       const found = mod.items.find((i) => i.id === itemId);
       if (found) {
-        const term = getTerm(section.formerTermId)!;
         return {
           item: withDetails(found),
           module: mod,
           section,
-          term,
           kind: "roadmap",
-          backHref: `/?section=${section.formerTermId}`,
+          backHref: `/?section=${section.stageId}`,
           backLabel: "Roadmap",
         };
       }
@@ -1893,6 +1921,18 @@ export function getItemLocation(itemId: string): ItemLocation | undefined {
       };
     }
   }
+  for (const mod of program.reference) {
+    const found = mod.items.find((i) => i.id === itemId);
+    if (found) {
+      return {
+        item: withDetails(found),
+        module: mod,
+        kind: "reference",
+        backHref: "/reference",
+        backLabel: "Reference",
+      };
+    }
+  }
   return undefined;
 }
 
@@ -1905,14 +1945,14 @@ export function getTermsForYear(yearId: string) {
 }
 
 export function allItems() {
-  const items = [
-    ...program.terms.flatMap((t) => t.modules.flatMap((m) => m.items)),
+  return [
+    ...roadmapModules().flatMap((m) => m.items),
     ...program.foundations.flatMap((m) => m.items),
+    ...program.reference.flatMap((m) => m.items),
   ];
-  return items;
 }
 
-/** Main roadmap item ids only (excludes Foundations). */
+/** Main roadmap item ids only (excludes Foundations + Reference). */
 export function roadmapItemIds() {
   return roadmapModules().flatMap((m) => m.items.map((i) => i.id));
 }
@@ -1927,18 +1967,31 @@ export function itemIdsInYear(yearId: string) {
   return getTermsForYear(yearId).flatMap((t) => itemIdsInTerm(t.id));
 }
 
-/** Recommended order on the main roadmap (former T1→T8). Foundations are separate. */
+/** Recommended order on the course spine (courses then CalArts support per stage). */
 export function orderedRoadmapItems() {
-  const out: { id: string; sectionId: string; formerTermId: string; orderKey: number }[] =
-    [];
+  const out: {
+    id: string;
+    sectionId: string;
+    stageId: string;
+    formerTermId?: string;
+    orderKey: number;
+  }[] = [];
   let key = 0;
   for (const section of roadmapSections()) {
+    for (const item of [...section.courses].sort((a, b) => a.order - b.order)) {
+      out.push({
+        id: item.id,
+        sectionId: section.id,
+        stageId: section.stageId,
+        orderKey: key++,
+      });
+    }
     for (const mod of section.modules) {
       for (const item of [...mod.items].sort((a, b) => a.order - b.order)) {
         out.push({
           id: item.id,
           sectionId: section.id,
-          formerTermId: section.formerTermId,
+          stageId: section.stageId,
           orderKey: key++,
         });
       }
@@ -1948,13 +2001,17 @@ export function orderedRoadmapItems() {
 }
 
 export function orderedProgramItems() {
-  /** Roadmap first; foundational material after (reference path only). */
   const out: { id: string; termId?: string; orderKey: number }[] = [];
   let key = 0;
   for (const row of orderedRoadmapItems()) {
-    out.push({ id: row.id, termId: row.formerTermId, orderKey: key++ });
+    out.push({ id: row.id, orderKey: key++ });
   }
   for (const mod of program.foundations) {
+    for (const item of [...mod.items].sort((a, b) => a.order - b.order)) {
+      out.push({ id: item.id, orderKey: key++ });
+    }
+  }
+  for (const mod of program.reference) {
     for (const item of [...mod.items].sort((a, b) => a.order - b.order)) {
       out.push({ id: item.id, orderKey: key++ });
     }

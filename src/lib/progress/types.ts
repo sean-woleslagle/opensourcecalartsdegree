@@ -1,4 +1,9 @@
-export type ItemStatus = "open" | "done" | "dismissed";
+export type ItemStatus =
+  | "open"
+  | "done"
+  | "dismissed"
+  | "in_progress"
+  | "reference";
 
 export interface ProgressRow {
   item_id: string;
@@ -25,19 +30,38 @@ export type LegacyProgressEntry = {
   updatedAt?: string;
 };
 
+const KNOWN_STATUSES: ItemStatus[] = [
+  "open",
+  "done",
+  "dismissed",
+  "in_progress",
+  "reference",
+];
+
 export function normalizeStatus(
   raw: LegacyProgressEntry | ProgressEntry | null | undefined,
 ): ItemStatus {
   if (!raw) return "open";
-  if (raw.status === "open" || raw.status === "done" || raw.status === "dismissed") {
+  if (raw.status && KNOWN_STATUSES.includes(raw.status)) {
     return raw.status;
   }
   if ("done" in raw && raw.done === true) return "done";
   return "open";
 }
 
+/**
+ * Done, dismissed (skipped on purpose), or reference (off main path) —
+ * counts for progress meters.
+ */
 export function isHandled(status: ItemStatus | undefined): boolean {
-  return status === "done" || status === "dismissed";
+  return (
+    status === "done" || status === "dismissed" || status === "reference"
+  );
+}
+
+/** Still on the active path (not finished, skipped, or reference-only). */
+export function isIncomplete(status: ItemStatus | undefined): boolean {
+  return status === "open" || status === "in_progress" || !status;
 }
 
 export function entryFromRow(row: ProgressRow): ProgressEntry {

@@ -93,15 +93,37 @@ export interface Track {
 
 /**
  * Soft landmark on the single roadmap (not Year/Term UI).
- * `formerTermId` keeps migration/debug linkage; hidden from labels.
+ * Course-centered path: each section is a course stage.
+ * `formerTermId` kept optional for old redirects; prefer `stageId`.
  */
 export interface RoadmapSection {
   id: string;
   title: string;
   blurb?: string;
-  /** Former term id (t1–t8) for redirects / anchors — not shown as “Term”. */
-  formerTermId: string;
+  /** @deprecated Former term id (t1–t8) — redirects only. */
+  formerTermId?: string;
+  /** Course stage id for anchors (`?section=`). */
+  stageId: string;
+  /** Primary course row(s) for this stage. */
+  courses: CurriculumItem[];
+  /** CalArts support modules nested under the course. */
   modules: Module[];
+  /** Pick-one group (e.g. Alive vs ToAnimate). */
+  pickOne?: boolean;
+}
+
+/** Spine unit: owned/queued Blender course + nested CalArts support. */
+export interface CourseStageDef {
+  id: string;
+  title: string;
+  blurb?: string;
+  order: number;
+  focus?: FocusTag;
+  courses: CurriculumItem[];
+  /** Module ids from former terms, nested under this stage. */
+  supportModuleIds: string[];
+  /** When true, courses are alternatives — dismiss the unused one. */
+  pickOne?: boolean;
 }
 
 export interface Program {
@@ -110,8 +132,10 @@ export interface Program {
   tagline: string;
   /** @deprecated Nav is a single roadmap; kept for data/migration only. */
   years: Year[];
-  /** Ordered curriculum chunks (former terms); UI uses roadmapSections(). */
+  /** Former term chunks — modules are remapped under courseStages. */
   terms: Term[];
   foundations: Module[];
+  /** Reference shelf (Launch Pad, Secrets ebook) — header route, not main scroll. */
+  reference: Module[];
   tracks: Track[];
 }

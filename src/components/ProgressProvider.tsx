@@ -14,6 +14,11 @@ import { createClient } from "@/lib/supabase/client";
 import { supabaseConfigured } from "@/lib/supabase/config";
 import { loadLocalProgress, saveLocalProgress } from "@/lib/progress/local";
 import {
+  applyCoursePathSeed,
+  hasCoursePathSeedRan,
+  markCoursePathSeedRan,
+} from "@/lib/progress/seed";
+import {
   entryFromRow,
   isHandled,
   normalizeStatus,
@@ -107,14 +112,43 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
           rows = (withStatus.data as ProgressRow[] | null) ?? null;
         }
         if (!cancelled) {
-          const map: ProgressMap = { ...localProgress };
+          let map: ProgressMap = { ...localProgress };
           if (rows) {
             for (const row of rows) {
               map[row.item_id] = entryFromRow(row);
             }
           }
+          // One-time Sean course-path seed (done / in progress / reference / dismiss alts).
+          if (!hasCoursePathSeedRan()) {
+            const seeded = applyCoursePathSeed(map);
+            map = seeded.map;
+            markCoursePathSeedRan();
+            saveLocalProgress(map);
+            for (const id of seeded.changedIds) {
+              const entry = map[id];
+              if (!entry) continue;
+              const base = {
+                user_id: u.id,
+                item_id: id,
+                done: entry.status === "done",
+                notes: entry.notes || null,
+                updated_at: entry.updatedAt,
+              };
+              const { error } = await supabase.from("progress").upsert(
+                { ...base, status: entry.status },
+                { onConflict: "user_id,item_id" },
+              );
+              // Until migration 003, in_progress/reference may fail — local still holds them.
+              if (error && entry.status !== "dismissed" && entry.status !== "in_progress" && entry.status !== "reference") {
+                await supabase
+                  .from("progress")
+                  .upsert(base, { onConflict: "user_id,item_id" });
+              }
+            }
+          } else {
+            saveLocalProgress(map);
+          }
           setProgress(map);
-          saveLocalProgress(map);
         }
       } else if (!cancelled) {
         setProgress({});
@@ -166,8 +200,13 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
         { ...base, status },
         { onConflict: "user_id,item_id" },
       );
-      // Until migration 002 is applied, status column is missing — keep done in sync for open/done.
-      if (error && status !== "dismissed") {
+      // Until migrations 002/003, new statuses may fail — localStorage remains source of truth.
+      if (
+        error &&
+        status !== "dismissed" &&
+        status !== "in_progress" &&
+        status !== "reference"
+      ) {
         await supabase
           .from("progress")
           .upsert(base, { onConflict: "user_id,item_id" });
